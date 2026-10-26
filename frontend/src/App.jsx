@@ -4,6 +4,8 @@ import { useThemeShortcut } from './theme/theme.js';
 import Workspace from './pages/Workspace.jsx';
 import Cases from './pages/Cases.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Benchmarks from './pages/Benchmarks.jsx';
+import HowItWorks from './pages/HowItWorks.jsx';
 
 export default function App() {
   useThemeShortcut();
@@ -16,6 +18,8 @@ export default function App() {
           <Route path="/" element={<Navigate to="/app" replace />} />
           <Route path="/app" element={<Workspace />} />
           <Route path="/cases" element={<Cases />} />
+          <Route path="/benchmarks" element={<Benchmarks />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

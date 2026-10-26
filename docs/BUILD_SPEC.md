@@ -78,5 +78,10 @@ JSON extracted from fences/prose if needed.
 - `LLM_MOCK=1` returns labelled placeholder output for UI testing only.
 
 ## Not built yet
-Eval script (`scripts/eval.js` → `frontend/public/eval-results.json`), Benchmarks,
-Overview, How it works, deploy config for this project.
+Overview page and deploy config.
+
+## Eval
+`node scripts/eval.js` (backend must be running) runs every case in eval/expected.json in
+three modes: `full`, `logs-only`, `full+probe`. A hypothesis is correct when its title +
+reasoning match the case's `match` regex. Writes `frontend/public/eval-results.json` (read by
+/benchmarks) and a timestamped copy in `eval/results/`. Options: `--modes`, `--cases`, `--api`.

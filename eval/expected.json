@@ -1,0 +1,41 @@
+{
+  "_note": "Ground truth for the 4 planted bugs. A hypothesis counts as correct when its title + reasoning match `match` (case-insensitive regex). Edit freely.",
+  "cases": [
+    {
+      "case": "case-a",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-a",
+      "branch": "main",
+      "log": "frontend/public/cases/case-a.log",
+      "category": "env",
+      "root_cause": "Code reads DB_URL but docker-compose.yml sets DATABASE_URL.",
+      "match": "DB_URL|name mismatch|variable name"
+    },
+    {
+      "case": "case-b",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-b",
+      "branch": "main",
+      "log": "frontend/public/cases/case-b.log",
+      "category": "platform",
+      "root_cause": "DATABASE_URL is only a build arg (compose build.args + Dockerfile ARG), so it is missing at runtime.",
+      "match": "build[- ]?(arg|time|stage)|\\bARG\\b|not (set|available|passed) at runtime|missing (from|at) runtime"
+    },
+    {
+      "case": "case-c",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-c",
+      "branch": "main",
+      "log": "frontend/public/cases/case-c.log",
+      "category": "config",
+      "root_cause": "docker-compose.yml hard-codes an unreachable old database IP (203.0.113.24) instead of the db service.",
+      "match": "203\\.0\\.113\\.24|hard-?coded|(wrong|incorrect|stale|old|external) (database |db )?(host|ip|address)"
+    },
+    {
+      "case": "case-d",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-d",
+      "branch": "main",
+      "log": "frontend/public/cases/case-d.log",
+      "category": "dependency",
+      "root_cause": "pg@7.4.3 is incompatible with Node 20 (pg < 8 breaks on Node >= 14).",
+      "match": "pg@?7|7\\.4\\.3|pg (driver |client )?version|(outdated|old|incompatible) (pg|postgres|node-postgres|driver)|EBADENGINE"
+    }
+  ]
+}
