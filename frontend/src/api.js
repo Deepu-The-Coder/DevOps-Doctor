@@ -17,7 +17,11 @@ async function post(path, body, signal) {
   }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `Request failed (${res.status})`);
+    const err = new Error(data.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    // Session gone (e.g. server restarted): let the auth state update everywhere.
+    if (res.status === 401) window.dispatchEvent(new Event('dd-auth-expired'));
+    throw err;
   }
   return res;
 }

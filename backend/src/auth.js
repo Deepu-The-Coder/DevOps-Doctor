@@ -1,13 +1,36 @@
-// "Sign in with GitHub" (OAuth web flow). The access token stays on the server in an
-// in-memory session; the browser only gets an opaque httpOnly cookie. The token is used
+// "Sign in with GitHub" (OAuth web flow). The access token stays on the server in a
+// session (kept in memory and saved to backend/.cache so restarts don't sign people out); the browser only gets an opaque httpOnly cookie. The token is used
 // to read repos (including private ones) and is never sent to the model.
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 
 const SESSION_COOKIE = 'dd_sid';
 const STATE_COOKIE = 'dd_oauth_state';
 const SESSION_MS = 8 * 60 * 60 * 1000;
-const sessions = new Map(); // sid -> { token, user, at }
+const SESSION_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'sessions.json');
+const sessions = loadSessions(); // sid -> { token, user, at }
+
+function loadSessions() {
+  try {
+    const now = Date.now();
+    const entries = Object.entries(JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8')));
+    return new Map(entries.filter(([, s]) => s && s.token && now - s.at < SESSION_MS));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveSessions() {
+  try {
+    fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true });
+    fs.writeFileSync(SESSION_FILE, JSON.stringify(Object.fromEntries(sessions)), { mode: 0o600 });
+  } catch (err) {
+    console.error('[auth] could not save sessions:', err.message);
+  }
+}
 
 const clientId = () => process.env.GITHUB_CLIENT_ID || '';
 const clientSecret = () => process.env.GITHUB_CLIENT_SECRET || '';
@@ -43,6 +66,7 @@ export function sessionFor(req) {
   if (!s) return null;
   if (Date.now() - s.at > SESSION_MS) {
     sessions.delete(sid);
+    saveSessions();
     return null;
   }
   return s;
@@ -101,6 +125,7 @@ authRouter.get('/github/callback', async (req, res) => {
       user: { login: u.login, name: u.name || u.login, avatar_url: u.avatar_url, html_url: u.html_url },
       at: Date.now(),
     });
+    saveSessions();
     res.setHeader('Set-Cookie', [clear, `${SESSION_COOKIE}=${sid}; ${cookieOpts(SESSION_MS)}`]);
     res.redirect(`${siteBase(req)}${back}`);
   } catch {
@@ -111,7 +136,7 @@ authRouter.get('/github/callback', async (req, res) => {
 
 authRouter.post('/logout', (req, res) => {
   const sid = parseCookies(req)[SESSION_COOKIE];
-  if (sid) sessions.delete(sid);
+  if (sid && sessions.delete(sid)) saveSessions();
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; ${cookieOpts(0)}`);
   res.json({ ok: true });
 });

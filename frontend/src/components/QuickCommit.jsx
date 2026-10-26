@@ -26,6 +26,7 @@ export default function QuickCommit({ repoUrl, branch, hypothesis, rank, label =
   const [direct, setDirect] = useState(readDirect);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [result, setResult] = useState(null);
   const ref = useOutsideClose(open && !busy, () => setOpen(false));
   const patch = hypothesis?.patch;
@@ -42,6 +43,7 @@ export default function QuickCommit({ repoUrl, branch, hypothesis, rank, label =
   const push = async () => {
     setBusy(true);
     setError('');
+    setNeedsLogin(false);
     setResult(null);
     try {
       const file = await api.readFile({ repoUrl, branch, path: patch.path });
@@ -70,6 +72,7 @@ export default function QuickCommit({ repoUrl, branch, hypothesis, rank, label =
       setResult(r);
     } catch (e) {
       setError(e.message);
+      setNeedsLogin(e.status === 401);
     } finally {
       setBusy(false);
     }
@@ -120,7 +123,14 @@ export default function QuickCommit({ repoUrl, branch, hypothesis, rank, label =
                   <input type="radio" checked={direct} onChange={() => setDirectPref(true)} /> push to <span className="mono">{branch}</span>
                 </label>
               </div>
-              {error && <div className="note bad qc-small">{error}</div>}
+              {error && (
+                <div className="note bad qc-small">
+                  {needsLogin ? 'Your GitHub session expired.' : error}{' '}
+                  {needsLogin && (
+                    <a href={api.loginUrl(window.location.pathname + window.location.search)}>Sign in again</a>
+                  )}
+                </div>
+              )}
               <div className="qc-actions">
                 <button type="button" className="link-btn" onClick={() => (setOpen(false), onNeedsEdit?.(hypothesis))}>
                   review first

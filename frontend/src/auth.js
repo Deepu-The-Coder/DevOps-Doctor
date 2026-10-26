@@ -18,6 +18,13 @@ export function refreshAuth() {
     .catch(() => set({ loading: false, configured: false, user: null }));
 }
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('dd-auth-expired', () => {
+    set({ user: null });
+    refreshAuth();
+  });
+}
+
 export async function signOut() {
   await api.logout().catch(() => {});
   set({ user: null });
