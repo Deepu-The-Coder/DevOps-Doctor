@@ -21,7 +21,7 @@ Docker Compose (`docker-compose.yml` + `Dockerfile`). The causes differ:
 |--------|------------|-------------|
 | case-a | env        | code reads `DB_URL` (src/config.js), docker-compose.yml sets `DATABASE_URL` |
 | case-b | platform   | `DATABASE_URL` is only a build arg (compose `build.args` + Dockerfile `ARG`), so it is missing at runtime |
-| case-c | network    | docker-compose.yml hard-codes an unreachable old DB IP (`203.0.113.24:5432`) instead of the `db` service |
+| case-c | config     | docker-compose.yml hard-codes an unreachable old DB IP (`203.0.113.24:5432`) instead of the `db` service |
 | case-d | dependency | `pg@7.4.3` on Node 20 (pg < 8 breaks on Node >= 14) |
 
 The "Reveal answer" text in frontend/src/data/cases.js is left for the team to write.

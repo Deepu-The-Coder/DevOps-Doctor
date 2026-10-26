@@ -56,7 +56,7 @@ async function chatOnce(messages, timeoutMs) {
         model,
         messages: /gemma/i.test(model) ? foldSystem(messages) : messages,
         temperature: 0.1,
-        max_tokens: 8000,
+        max_tokens: 12000,
         ...extraBody(),
       }),
     });
@@ -113,7 +113,9 @@ export function extractJSON(text) {
       else if (c === '{') depth++;
       else if (c === '}' && --depth === 0) {
         const cand = src.slice(i, j + 1);
-        if (!best || cand.length > best.length) {
+        // Prefer the answer object (has "hypotheses"), then the largest one.
+        const rank = (x) => (x ? (/"hypotheses"\s*:/.test(x) ? 1e9 : 0) + x.length : -1);
+        if (rank(cand) > rank(best)) {
           try {
             JSON.parse(cand);
             best = cand;

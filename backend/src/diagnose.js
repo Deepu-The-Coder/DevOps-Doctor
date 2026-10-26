@@ -28,6 +28,8 @@ logs with line numbers ("L12| text"). Produce a differential diagnosis.
 
 Rules:
 - Return ONLY a JSON object matching the schema. No prose outside JSON.
+- Keep any private reasoning short (under 250 words). Do not re-check the same file twice.
+  It is better to answer with calibrated confidences than to keep deliberating.
 - 3 to 5 hypotheses, sorted by confidence (0..1, independent, need not sum to 1).
 - Look specifically for mismatches between code and platform config: env var names the
   code reads vs names the platform sets, build-time-only vars (build args) vs runtime env, ports,
@@ -45,11 +47,23 @@ ${DIAGNOSIS_SCHEMA}`;
 
 export async function runDiagnosis({ files, logs, mode }) {
   const caseFile = renderCaseFile({ files, logs, mode });
-  const { json, usage } = await chatJSON([
+  const messages = [
     { role: 'system', content: SYSTEM },
     { role: 'user', content: caseFile },
-  ]);
-  return { diagnosis: normalizeDiagnosis(json, { files: mode === 'logs-only' ? [] : files, logs }), usage };
+  ];
+  // An answer with no usable hypotheses gets one more try.
+  for (let attempt = 0; ; attempt++) {
+    const { json, usage } = await chatJSON(messages);
+    const diagnosis = normalizeDiagnosis(json, { files: mode === 'logs-only' ? [] : files, logs });
+    if (diagnosis.hypotheses.length || attempt >= 1) {
+      if (!diagnosis.hypotheses.length) {
+        const e = new Error('Model returned no usable hypotheses');
+        e.status = 502;
+        throw e;
+      }
+      return { diagnosis, usage };
+    }
+  }
 }
 
 // Clean up model output and verify every evidence ref against the real case file.
