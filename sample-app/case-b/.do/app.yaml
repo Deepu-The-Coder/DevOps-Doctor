@@ -1,0 +1,26 @@
+name: orders-api
+region: nyc
+services:
+  - name: orders-api
+    github:
+      repo: Deepu-The-Coder/DevOps-Doctor
+      branch: main
+      deploy_on_push: false
+    source_dir: sample-app/case-b
+    dockerfile_path: sample-app/case-b/Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health
+    envs:
+      - key: DATABASE_URL
+        scope: BUILD_TIME
+        type: SECRET
+        value: ${orders-db.DATABASE_URL}
+databases:
+  - name: orders-db
+    engine: PG
+    version: "16"
+    production: true
+    cluster_name: orders-db-nyc3

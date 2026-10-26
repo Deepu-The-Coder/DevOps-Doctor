@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevOpsDoctor — Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          },
+          colors: {
+            app: {
+              bg: '#0d1117',
+              panel: '#161b22',
+              surface: '#21262d',
+              border: '#30363d',
+              borderLight: '#3d444d',
+              primary: '#2f81f7',
+              primaryHover: '#388bfd',
+              text: '#e6edf3',
+              muted: '#8b949e',
+              dim: '#6e7681',
+              green: '#2ea043',
+              greenMuted: '#1b472c',
+              greenText: '#3fb950',
+              red: '#da3633',
+              redMuted: '#4c1517',
+              redText: '#f85149',
+              amber: '#d29922',
+              amberMuted: '#3d2e05',
+              amberText: '#e3b341',
+              tagBg: '#1f242c'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body {
+      background-color: #0d1117;
+      color: #e6edf3;
+      font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      line-height: 1.45;
+      overflow: hidden;
+      height: 100vh;
+      margin: 0;
+    }
+    /* Custom thin scrollbars for terminal and code panels */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #484f58;
+    }
+    .code-line-highlight {
+      background-color: rgba(47, 129, 247, 0.12);
+      border-left: 2px solid #2f81f7;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen select-none bg-app-bg text-app-text">
+
+  <!-- Slim Top Bar (48px) -->
+  <header class="h-[48px] min-h-[48px] bg-app-panel border-b border-app-border flex items-center justify-between px-4 z-20">
+    <div class="flex items-center space-x-3">
+      <!-- Plain text product name -->
+      <span class="font-semibold text-app-text tracking-tight text-[14px]">DevOpsDoctor</span>
+      
+      <span class="text-app-dim text-xs font-mono">/</span>
+      
+      <!-- Current repo in monospace -->
+      <div class="flex items-center space-x-1.5 px-2 py-1 bg-app-bg rounded-[4px] border border-app-border text-xs font-mono text-app-text">
+        <svg class="w-3.5 h-3.5 text-app-muted" viewBox="0 0 16 16" fill="currentColor">
+          <path fill-rule="evenodd" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1h-8a1 1 0 00-1 1v6.708A2.486 2.486 0 014.5 9h8V1.5zM5 12.25a.25.25 0 01.25-.25h3.5a.25.25 0 01.25.25v3.25a.25.25 0 01-.4.2l-1.6-1.2-1.6 1.2a.25.25 0 01-.4-.2v-3.25z"/>
+        </svg>
+        <span class="text-app-muted">acme/orders-api</span>
+        <span class="text-app-dim">@</span>
+        <span class="text-app-text font-medium">case-c</span>
+      </div>
+
+      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-medium bg-app-surface text-app-amberText border border-app-border">
+        FAILED DEPLOY
+      </span>
+    </div>
+
+    <!-- Right action button -->
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center text-xs text-app-muted space-x-2 font-mono">
+        <span class="inline-block w-2 h-2 rounded-full bg-app-green"></span>
+        <span>engine: idle</span>
+      </div>
+      <button class="h-[30px] px-3 bg-app-surface hover:bg-app-border border border-app-border text-app-text text-xs font-medium rounded-[6px] transition flex items-center space-x-1.5 shadow-none">
+        <svg class="w-3.5 h-3.5 text-app-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Run probes</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main 3-Column Workspace -->
+  <main class="flex-1 flex overflow-hidden">
+    
+    <!-- LEFT COLUMN: Case (320px) -->
+    <aside class="w-[320px] min-w-[320px] max-w-[320px] bg-app-panel border-r border-app-border flex flex-col h-full overflow-hidden">
+      <!-- Section Header -->
+      <div class="h-[36px] min-h-[36px] px-3.5 border-b border-app-border flex items-center justify-between bg-app-panel">
+        <span class="text-[11px] font-semibold text-app-muted uppercase tracking-wider">Case Setup</span>
+        <span class="text-[11px] font-mono text-app-dim">#TR-8094</span>
+      </div>
+
+      <!-- Form Inputs container with scroll if needed -->
+      <div class="p-3.5 space-y-3.5 flex-1 flex flex-col overflow-y-auto">
+        <!-- Repo URL Field -->
+        <div>
+          <label class="block text-[11px] font-semibold text-app-muted uppercase tracking-wider mb-1.5">Repository URL</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              readonly 
+              value="https://github.com/acme/orders-api" 
+              class="w-full h-[30px] px-2.5 bg-app-bg border border-app-border rounded-[6px] text-xs font-mono text-app-text focus:outline-none focus:border-app-primary"
+            />
+          </div>
+        </div>
+
+        <!-- Branch Selector -->
+        <div>
+          <label class="block text-[11px] font-semibold text-app-muted uppercase tracking-wider mb-1.5">Branch</label>
+          <div class="relative">
+            <select class="w-full h-[30px] px-2.5 bg-app-bg border border-app-border rounded-[6px] text-xs font-mono text-app-text appearance-none focus:outline-none focus:border-app-primary cursor-pointer">
+              <option value="case-c" selected>case-c (active failure)</option>
+              <option value="case-a">case-a (env DB_URL mismatch)</option>
+              <option value="case-b">case-b (missing pg sslmode)</option>
+              <option value="case-d">case-d (bind localhost port 3000)</option>
+              <option value="main">main</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-app-muted">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Segmented Control -->
+        <div>
+          <label class="block text-[11px] font-semibold text-app-muted uppercase tracking-wider mb-1.5">Analysis Scope</label>
+          <div class="grid grid-cols-2 p-0.5 bg-app-bg border border-app-border rounded-[6px] text-xs">
+            <button class="py-1 px-2 rounded-[4px] font-medium text-xs bg-app-surface text-app-text border border-app-border shadow-none text-center">
+              Full context
+            </button>
+            <button class="py-1 px-2 rounded-[4px] font-medium text-xs text-app-muted hover:text-app-text text-center transition">
+              Logs only
+            </button>
+          </div>
+        </div>
+
+        <!-- Terminal Log Input / Buffer -->
+        <div class="flex-1 flex flex-col min-h-[220px]">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[11px] font-semibold text-app-muted uppercase tracking-wider">Deployment Log Stream</label>
+            <span class="text-[11px] font-mono text-app-dim">38 lines captured</span>
+          </div>
+          <div class="flex-1 bg-app-bg border border-app-border rounded-[6px] p-2 font-mono text-[11px] leading-[18px] text-app-muted overflow-y-auto flex">
+            <!-- Line numbers -->
+            <div class="text-app-dim select-none pr-2.5 border-r border-app-border text-right min-w-[28px] space-y-0">
+              <div>34</div>
+              <div>35</div>
+              <div>36</div>
+              <div>37</div>
+              <div>38</div>
+              <div>39</div>
+              <div>40</div>
+              <div class="text-app-redText font-semibold">41</div>
+              <div>42</div>
+              <div>43</div>
+              <div>44</div>
+              <div>45</div>
+            </div>
+            <!-- Log text -->
+            <div class="pl-2.5 overflow-x-auto whitespace-pre space-y-0 text-app-text">
+              <div class="text-app-dim">2026-10-26 11:02:18 [orders-api] node v20.18.0</div>
+              <div class="text-app-dim">2026-10-26 11:02:19 [orders-api] pool initializing</div>
+              <div class="text-app-dim">2026-10-26 11:02:22 [orders-api] acquired client #1</div>
+              <div class="text-app-dim">2026-10-26 11:02:25 [orders-api] dial tcp4 10.120.0.4:25060</div>
+              <div class="text-app-dim">2026-10-26 11:02:30 [orders-api] timeout: socket 10000ms</div>
+              <div class="text-app-dim">2026-10-26 11:02:35 [orders-api] retrying tcp dial (1/3)</div>
+              <div class="text-app-dim">2026-10-26 11:02:38 [orders-api] SYN sent, no ACK received</div>
+              <div class="text-app-redText bg-app-redMuted/40 px-1 -mx-1 rounded-[2px] font-medium">2026-10-26 11:02:41 [orders-api] Error: connect ETIMEDOUT 10.120.0.4:25060</div>
+              <div class="text-app-dim">2026-10-26 11:02:41 [orders-api]   at TCPConnectWrap.afterConnect</div>
+              <div class="text-app-dim">2026-10-26 11:02:42 [orders-api]   at src/db.js:14:10</div>
+              <div class="text-app-dim">2026-10-26 11:02:44 [orders-api] healthcheck probe: timeout</div>
+              <div class="text-app-redText">2026-10-26 11:02:45 [orders-api] container exit code 1</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button class="w-full h-[32px] bg-app-primary hover:bg-app-primaryHover text-white text-xs font-medium rounded-[6px] transition flex items-center justify-center space-x-1.5 shadow-none mt-auto">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Run diagnosis</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CENTER COLUMN: Differential (flexible) -->
+    <section class="flex-1 bg-app-bg flex flex-col h-full overflow-hidden border-r border-app-border">
+      <!-- Section Header -->
+      <div class="h-[36px] min-h-[36px] px-4 border-b border-app-border flex items-center justify-between bg-app-panel">
+        <div class="flex items-center space-x-2">
+          <span class="text-[11px] font-semibold text-app-muted uppercase tracking-wider">Differential Diagnosis</span>
+          <span class="text-[11px] font-mono px-1.5 py-0.2 bg-app-surface text-app-text rounded border border-app-border">4 hypotheses evaluated</span>
+        </div>
+        <div class="text-xs text-app-muted font-mono">
+          sorted by confidence &darr;
+        </div>
+      </div>
+
+      <!-- Differential List Content -->
+      <div class="p-4 flex-1 overflow-y-auto space-y-3">
+
+        <!-- Stacked Row 1 (Top Hypothesis with left border accent) -->
+        <article class="bg-app-panel border border-app-border border-l-[3px] border-l-app-primary rounded-[6px] p-3 transition hover:border-app-borderLight">
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-xs font-semibold text-app-primary">01</span>
+              <h2 class="text-[13px] font-semibold text-app-text">DB host blocked by network rule (ETIMEDOUT after 10s)</h2>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-tagBg border border-app-border text-app-muted font-medium">network</span>
+            </div>
+            <!-- Percentage & Bar -->
+            <div class="w-[120px] flex items-center space-x-2">
+              <div class="flex-1 h-1.5 bg-app-surface rounded-full overflow-hidden">
+                <div class="h-full bg-app-primary rounded-full" style="width: 72%;"></div>
+              </div>
+              <span class="text-xs font-mono font-medium text-app-text w-[32px] text-right">72%</span>
+            </div>
+          </div>
+
+          <!-- One line of reasoning -->
+          <p class="text-xs text-app-muted mb-2.5">
+            TCP socket attempt to 10.120.0.4 on port 25060 dropped silently with no TCP RST or ICMP unreachable returned, characteristic of VPC firewall drop or database trusted source whitelist restriction.
+          </p>
+
+          <!-- Small evidence chips in monospace -->
+          <div class="flex items-center justify-between pt-2 border-t border-app-border/70 text-xs">
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <span class="text-[11px] font-mono text-app-dim uppercase tracking-wider mr-1">Evidence:</span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-text cursor-pointer hover:border-app-primary hover:text-app-primary transition">
+                src/db.js:14
+              </span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-text cursor-pointer hover:border-app-primary hover:text-app-primary transition">
+                log L41
+              </span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-muted">
+                .do/app.yaml:12
+              </span>
+            </div>
+            <div class="text-[11px] font-mono text-app-dim">
+              rules out if: <span class="text-app-muted">SYN-ACK succeeds on port 25060</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Stacked Row 2 -->
+        <article class="bg-app-panel border border-app-border rounded-[6px] p-3 transition hover:border-app-borderLight">
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-xs font-medium text-app-muted">02</span>
+              <h2 class="text-[13px] font-medium text-app-text">Wrong database host in connection string</h2>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-tagBg border border-app-border text-app-muted font-medium">config</span>
+            </div>
+            <div class="w-[120px] flex items-center space-x-2">
+              <div class="flex-1 h-1.5 bg-app-surface rounded-full overflow-hidden">
+                <div class="h-full bg-app-muted/60 rounded-full" style="width: 14%;"></div>
+              </div>
+              <span class="text-xs font-mono font-medium text-app-muted w-[32px] text-right">14%</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-app-muted mb-2.5">
+            IP 10.120.0.4 may resolve to a decommissioned private replica or stale subnet route rather than the primary managed cluster address.
+          </p>
+
+          <div class="flex items-center justify-between pt-2 border-t border-app-border/70 text-xs">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] font-mono text-app-dim uppercase tracking-wider mr-1">Evidence:</span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-muted">
+                .env.example:4
+              </span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-muted">
+                log L37
+              </span>
+            </div>
+            <div class="text-[11px] font-mono text-app-dim">
+              rules out if: <span class="text-app-muted">host matches live cluster topology</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Stacked Row 3 -->
+        <article class="bg-app-panel border border-app-border rounded-[6px] p-3 transition hover:border-app-borderLight">
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-xs font-medium text-app-muted">03</span>
+              <h2 class="text-[13px] font-medium text-app-text">Postgres instance not accepting connections</h2>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-tagBg border border-app-border text-app-muted font-medium">platform</span>
+            </div>
+            <div class="w-[120px] flex items-center space-x-2">
+              <div class="flex-1 h-1.5 bg-app-surface rounded-full overflow-hidden">
+                <div class="h-full bg-app-muted/60 rounded-full" style="width: 9%;"></div>
+              </div>
+              <span class="text-xs font-mono font-medium text-app-muted w-[32px] text-right">9%</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-app-muted mb-2.5">
+            Database daemon may be restarting, in recovery state, or hitting max connection limit on target port 25060.
+          </p>
+
+          <div class="flex items-center justify-between pt-2 border-t border-app-border/70 text-xs">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] font-mono text-app-dim uppercase tracking-wider mr-1">Evidence:</span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-muted">
+                log L41
+              </span>
+            </div>
+            <div class="text-[11px] font-mono text-app-dim">
+              rules out if: <span class="text-app-muted">unreachable state is localized to caller</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Stacked Row 4 -->
+        <article class="bg-app-panel border border-app-border rounded-[6px] p-3 transition hover:border-app-borderLight">
+          <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono text-xs font-medium text-app-muted">04</span>
+              <h2 class="text-[13px] font-medium text-app-text">SSL required but not configured</h2>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-tagBg border border-app-border text-app-muted font-medium">config</span>
+            </div>
+            <div class="w-[120px] flex items-center space-x-2">
+              <div class="flex-1 h-1.5 bg-app-surface rounded-full overflow-hidden">
+                <div class="h-full bg-app-muted/60 rounded-full" style="width: 5%;"></div>
+              </div>
+              <span class="text-xs font-mono font-medium text-app-muted w-[32px] text-right">5%</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-app-muted mb-2.5">
+            Managed clusters often reject unencrypted initial handshake; however missing SSL typically yields immediate ECONNRESET rather than socket ETIMEDOUT.
+          </p>
+
+          <div class="flex items-center justify-between pt-2 border-t border-app-border/70 text-xs">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] font-mono text-app-dim uppercase tracking-wider mr-1">Evidence:</span>
+              <span class="px-1.5 py-0.5 rounded text-[11px] font-mono bg-app-bg border border-app-border text-app-muted">
+                src/db.js:10
+              </span>
+            </div>
+            <div class="text-[11px] font-mono text-app-dim">
+              rules out if: <span class="text-app-muted">failure happens at TCP layer prior to TLS</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Evidence (420px) -->
+    <aside class="w-[420px] min-w-[420px] max-w-[420px] bg-app-panel flex flex-col h-full overflow-hidden">
+      <!-- Tabs (Files / Probes / Patch) -->
+      <div class="h-[36px] min-h-[36px] px-2 border-b border-app-border flex items-center justify-between bg-app-panel">
+        <div class="flex items-center space-x-1">
+          <!-- Active Files tab -->
+          <button class="h-[28px] px-3 rounded-[4px] bg-app-surface text-app-text font-medium text-xs border border-app-border flex items-center space-x-1.5 shadow-none">
+            <svg class="w-3.5 h-3.5 text-app-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Files</span>
+          </button>
+          <!-- Probes tab -->
+          <button class="h-[28px] px-3 rounded-[4px] text-app-muted hover:text-app-text font-medium text-xs transition flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-app-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>Probes</span>
+          </button>
+          <!-- Patch tab -->
+          <button class="h-[28px] px-3 rounded-[4px] text-app-muted hover:text-app-text font-medium text-xs transition flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-app-dim" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            <span>Patch</span>
+          </button>
+        </div>
+
+        <div class="text-[11px] font-mono text-app-dim">
+          src/db.js
+        </div>
+      </div>
+
+      <!-- File Header sub-bar -->
+      <div class="px-3.5 py-1.5 bg-app-bg border-b border-app-border flex items-center justify-between text-xs font-mono">
+        <span class="text-app-text font-medium">src/db.js</span>
+        <span class="text-app-dim">lines 12–16 cited</span>
+      </div>
+
+      <!-- Code Viewer with line numbers & highlighted lines 12–16 -->
+      <div class="flex-1 bg-app-bg overflow-y-auto font-mono text-[11px] leading-[20px] select-text">
+        <table class="w-full border-collapse">
+          <tbody>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">1</td>
+              <td class="pl-3 text-app-dim">import { Pool } from 'pg';</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">2</td>
+              <td class="pl-3 text-app-dim">import dotenv from 'dotenv';</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">3</td>
+              <td class="pl-3 text-app-dim">dotenv.config();</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">4</td>
+              <td class="pl-3 text-app-dim"></td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">5</td>
+              <td class="pl-3 text-app-text"><span class="text-app-primary">const</span> config = {</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">6</td>
+              <td class="pl-3 text-app-text">&nbsp;&nbsp;connectionTimeoutMillis: <span class="text-app-amberText">10000</span>,</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">7</td>
+              <td class="pl-3 text-app-text">&nbsp;&nbsp;max: <span class="text-app-amberText">20</span>,</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">8</td>
+              <td class="pl-3 text-app-text">&nbsp;&nbsp;ssl: { rejectUnauthorized: <span class="text-app-redText">false</span> }</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">9</td>
+              <td class="pl-3 text-app-text">};</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">10</td>
+              <td class="pl-3 text-app-dim"></td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">11</td>
+              <td class="pl-3 text-app-primary">// Database connection pool initialization</td>
+            </tr>
+            <!-- Highlighted lines 12–16 -->
+            <tr class="code-line-highlight">
+              <td class="w-[38px] text-right pr-2.5 text-app-primary font-semibold select-none border-r border-app-border align-top">12</td>
+              <td class="pl-3 text-app-text font-medium"><span class="text-app-primary">export const</span> pool = <span class="text-app-primary">new</span> Pool({</td>
+            </tr>
+            <tr class="code-line-highlight">
+              <td class="w-[38px] text-right pr-2.5 text-app-primary font-semibold select-none border-r border-app-border align-top">13</td>
+              <td class="pl-3 text-app-text font-medium">&nbsp;&nbsp;...config,</td>
+            </tr>
+            <tr class="code-line-highlight">
+              <td class="w-[38px] text-right pr-2.5 text-app-primary font-semibold select-none border-r border-app-border align-top">14</td>
+              <td class="pl-3 text-app-text font-semibold">&nbsp;&nbsp;connectionString: process.env.DATABASE_URL</td>
+            </tr>
+            <tr class="code-line-highlight">
+              <td class="w-[38px] text-right pr-2.5 text-app-primary font-semibold select-none border-r border-app-border align-top">15</td>
+              <td class="pl-3 text-app-text font-medium">});</td>
+            </tr>
+            <tr class="code-line-highlight">
+              <td class="w-[38px] text-right pr-2.5 text-app-primary font-semibold select-none border-r border-app-border align-top">16</td>
+              <td class="pl-3 text-app-text font-medium"></td>
+            </tr>
+            <!-- End Highlight -->
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">17</td>
+              <td class="pl-3 text-app-text">pool.on(<span class="text-app-greenText">'error'</span>, (err) =&gt; {</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">18</td>
+              <td class="pl-3 text-app-text">&nbsp;&nbsp;console.error(<span class="text-app-greenText">'Unexpected client error'</span>, err);</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">19</td>
+              <td class="pl-3 text-app-text">});</td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">20</td>
+              <td class="pl-3 text-app-dim"></td>
+            </tr>
+            <tr>
+              <td class="w-[38px] text-right pr-2.5 text-app-dim select-none border-r border-app-border align-top">21</td>
+              <td class="pl-3 text-app-primary">export const</span> query = (text, params) =&gt; pool.query(text, params);</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- File inspection footer annotation -->
+      <div class="p-2.5 bg-app-panel border-t border-app-border text-[11px] text-app-muted flex items-start space-x-2">
+        <svg class="w-4 h-4 text-app-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="leading-normal">
+          <span class="text-app-text font-medium">AST Analysis:</span> Line 14 consumes <span class="font-mono text-app-text">DATABASE_URL</span> which matches deployment spec. ETIMEDOUT occurs at pool client socket creation.
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Status Bar (28px) -->
+  <footer class="h-[28px] min-h-[28px] bg-app-panel border-t border-app-border px-3 flex items-center justify-between text-[11px] font-mono text-app-muted z-20">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-1.5">
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-app-green"></span>
+        <span class="text-app-text">gemma-4-9b-it</span>
+        <span class="text-app-dim">(do-serverless)</span>
+      </div>
+      <span class="text-app-border">|</span>
+      <span>2.4s</span>
+      <span class="text-app-border">|</span>
+      <span>9 files</span>
+      <span class="text-app-border">|</span>
+      <span>38 log lines</span>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <span class="text-app-dim">SANDBOX: READ-ONLY</span>
+      <span class="text-app-border">|</span>
+      <span class="text-app-muted">1440 &times; 900</span>
+    </div>
+  </footer>
+
+</body>
+</html>
