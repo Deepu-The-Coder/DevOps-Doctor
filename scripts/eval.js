@@ -31,9 +31,15 @@ const expected = JSON.parse(fs.readFileSync(path.join(ROOT, 'eval/expected.json'
   (c) => !ONLY || ONLY.includes(c.case)
 );
 
+// Retries once if the backend connection drops (e.g. it restarted).
 async function post(p, body) {
-  const res = await fetch(API + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  return res;
+  const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  try {
+    return await fetch(API + p, opts);
+  } catch {
+    await new Promise((r) => setTimeout(r, 3000));
+    return fetch(API + p, opts);
+  }
 }
 
 async function diagnose(c, logs, mode) {
@@ -109,6 +115,12 @@ for (const mode of MODES) {
 }
 
 const out = { generated_at: new Date().toISOString(), model, api: API, fp_threshold: FP_THRESHOLD, runs };
+const total = runs.reduce((a, r) => a + r.cases.length, 0);
+const errored = runs.reduce((a, r) => a + r.totals.errors, 0);
+if (!total || errored === total) {
+  console.error('\nEvery run errored; not writing results. Is the backend running and the model configured?');
+  process.exit(1);
+}
 fs.mkdirSync(path.join(ROOT, 'eval/results'), { recursive: true });
 const stamp = out.generated_at.replace(/[:.]/g, '-');
 fs.writeFileSync(path.join(ROOT, `eval/results/${stamp}.json`), JSON.stringify(out, null, 2));

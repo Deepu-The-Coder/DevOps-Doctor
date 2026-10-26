@@ -59,14 +59,18 @@ export async function ingestRepo(repoUrl, branch) {
   const hit = ingestCache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
 
-  const treeRes = await fetch(
-    `https://api.github.com/repos/${ref.owner}/${ref.repo}/git/trees/${encodeURIComponent(ref.branch)}?recursive=1`,
-    { headers: ghHeaders() }
+  // Pin to the branch's current commit so raw files aren't served from a stale CDN cache.
+  const commitRes = await fetch(
+    `https://api.github.com/repos/${ref.owner}/${ref.repo}/commits/${encodeURIComponent(ref.branch)}`,
+    { headers: { ...ghHeaders(), Accept: 'application/vnd.github.sha' } }
   );
-  if (treeRes.status === 404) throw httpError(404, `Repo or branch not found: ${ref.owner}/${ref.repo}@${ref.branch}`);
-  if (treeRes.status === 403 || treeRes.status === 429)
-    throw httpError(429, 'GitHub rate limit hit. Set GITHUB_TOKEN on the backend.');
-  if (!treeRes.ok) throw httpError(502, `GitHub API error ${treeRes.status}`);
+  checkGitHub(commitRes, ref);
+  const commit = (await commitRes.text()).trim();
+
+  const treeRes = await fetch(`https://api.github.com/repos/${ref.owner}/${ref.repo}/git/trees/${commit}?recursive=1`, {
+    headers: ghHeaders(),
+  });
+  checkGitHub(treeRes, ref);
   const tree = await treeRes.json();
 
   const prefix = ref.path ? ref.path + '/' : '';
@@ -84,7 +88,7 @@ export async function ingestRepo(repoUrl, branch) {
 
   const contents = await mapLimit(candidates, 8, async (f) => {
     const r = await fetch(
-      `https://raw.githubusercontent.com/${ref.owner}/${ref.repo}/${encodeURIComponent(ref.branch)}/${f.full
+      `https://raw.githubusercontent.com/${ref.owner}/${ref.repo}/${commit}/${f.full
         .split('/')
         .map(encodeURIComponent)
         .join('/')}`,
@@ -105,13 +109,19 @@ export async function ingestRepo(repoUrl, branch) {
 
   const value = {
     repo: ref,
-    sha: tree.sha,
+    sha: commit,
     files,
     tree: allPaths.map((f) => f.rel), // full listing, for read_file probes
     skipped: allPaths.length - files.length,
   };
   ingestCache.set(key, { at: Date.now(), value });
   return value;
+}
+
+function checkGitHub(res, ref) {
+  if (res.status === 404 || res.status === 422) throw httpError(404, `Repo or branch not found: ${ref.owner}/${ref.repo}@${ref.branch}`);
+  if (res.status === 403 || res.status === 429) throw httpError(429, 'GitHub rate limit hit. Set GITHUB_TOKEN on the backend.');
+  if (!res.ok) throw httpError(502, `GitHub API error ${res.status}`);
 }
 
 // Fetch one more file from an already-ingested repo (used by the read_file probe).
@@ -122,9 +132,7 @@ export async function readRepoFile(ingest, relPath) {
   if (existing) return { ok: true, content: existing.content };
   const full = (ingest.repo.path ? ingest.repo.path + '/' : '') + clean;
   const r = await fetch(
-    `https://raw.githubusercontent.com/${ingest.repo.owner}/${ingest.repo.repo}/${encodeURIComponent(
-      ingest.repo.branch
-    )}/${full.split('/').map(encodeURIComponent).join('/')}`,
+    `https://raw.githubusercontent.com/${ingest.repo.owner}/${ingest.repo.repo}/${ingest.sha}/${full.split('/').map(encodeURIComponent).join('/')}`,
     { headers: process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {} }
   );
   if (!r.ok) return { ok: false, detail: `fetch failed ${r.status}` };
