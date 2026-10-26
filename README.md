@@ -99,10 +99,10 @@ reproducible with `node scripts/eval.js`. Model: `gemma-4-26b-a4b-it`.</sub>
 ## Try it in 2 minutes
 
 1. Start the app (see [Setup](#setup)) and open <http://localhost:5173/cases>.
-2. Click **Open in workspace** on **case-a**. The repo and log are pre-filled.
+2. Click **Open in workspace** on **case-b**. The repo and log are pre-filled.
 3. Press **Ctrl+Enter**. After the model replies (see [Limitations](#limitations) for timing),
-   #1 reads *"code reads `DB_URL`, compose sets `DATABASE_URL`"*, citing `src/config.js:4`
-   and `docker-compose.yml:5`.
+   #1 reads *"`DATABASE_URL` is only a build arg, missing at runtime"*, citing
+   `docker-compose.yml` and `Dockerfile:3`.
 4. Click an evidence chip to open the file at that line. Press **D** for the patch.
 5. Try **case-c** and press **P**: the model probes the hard-coded IP and re-ranks.
 6. Open **Benchmarks** to compare repo + logs with logs only.
@@ -112,7 +112,7 @@ The four sample apps live in [`sample-app/`](sample-app/) and their logs in
 
 | Case | Planted bug | Where |
 |---|---|---|
-| case-a | Code reads `DB_URL`, compose sets `DATABASE_URL` | `src/config.js:4` |
+| case-a | Code reads `DB_URL`, compose sets `DATABASE_URL` | `src/config.js:4`, **now fixed on `main` by DevOpsDoctor's own Commit fix** ([`dac32fa`](https://github.com/Deepu-The-Coder/DevOps-Doctor/commit/dac32fa)) |
 | case-b | `DATABASE_URL` only a build arg, missing at runtime | `docker-compose.yml`, `Dockerfile` |
 | case-c | Hard-coded, unreachable old DB IP `203.0.113.24` | `docker-compose.yml:5` |
 | case-d | `pg@7.4.3` incompatible with Node 20 | `package.json` |
