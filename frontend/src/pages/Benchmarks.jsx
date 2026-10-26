@@ -6,6 +6,20 @@ const MODE_LABEL = { full: 'Full context', 'logs-only': 'Logs only', 'full+probe
 const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 const secs = (ms) => (ms == null ? '–' : `${(ms / 1000).toFixed(1)}s`);
 
+// Accuracy over completed runs; provider errors are excluded and reported separately.
+function summarize(run) {
+  const ok = run.cases.filter((c) => !c.error);
+  const correct = ok.filter((c) => c.top1_correct).length;
+  return {
+    correct,
+    completed: ok.length,
+    errors: run.cases.length - ok.length,
+    accuracy: ok.length ? correct / ok.length : 0,
+    avg_time_ms: ok.length ? Math.round(ok.reduce((a, c) => a + c.time_ms, 0) / ok.length) : null,
+    false_positives: ok.reduce((a, c) => a + c.false_positives, 0),
+  };
+}
+
 export default function Benchmarks() {
   const [data, setData] = useState(undefined); // undefined = loading, null = missing
   const [mode, setMode] = useState('full');
@@ -35,8 +49,7 @@ export default function Benchmarks() {
     );
 
   const run = data.runs.find((r) => r.mode === mode) || data.runs[0];
-  const n = run.cases.length;
-  const correct = run.cases.filter((c) => c.top1_correct).length;
+  const t = summarize(run);
 
   return (
     <div className="bench-page">
@@ -56,9 +69,13 @@ export default function Benchmarks() {
       </div>
 
       <div className="stats">
-        <Stat label="Top-1 accuracy" value={pct(run.totals.top1_accuracy)} sub={`${correct} of ${n} cases`} />
-        <Stat label="Avg time to diagnosis" value={secs(run.totals.avg_time_ms)} sub={run.totals.errors ? `${run.totals.errors} run(s) errored, excluded` : 'per case, wall clock'} />
-        <Stat label="False positives" value={String(run.totals.false_positives)} sub="across all cases" />
+        <Stat
+          label="Top-1 accuracy"
+          value={t.completed ? pct(t.accuracy) : '–'}
+          sub={`${t.correct} of ${t.completed} completed${t.errors ? ` · ${t.errors} errored, excluded` : ''}`}
+        />
+        <Stat label="Avg time to diagnosis" value={secs(t.avg_time_ms)} sub="per completed case, wall clock" />
+        <Stat label="False positives" value={String(t.false_positives)} sub="across completed cases" />
       </div>
 
       <section className="bench-section">
@@ -84,9 +101,9 @@ export default function Benchmarks() {
             {run.cases.map((c) => (
               <tr key={c.case}>
                 <td className="mono">{c.case}</td>
-                <td className={c.top1_correct ? 'ok' : 'bad'}>{c.error ? 'error' : c.top1_correct ? '✓ correct' : '✗ wrong'}</td>
-                <td className="mono num">{c.correct_rank ?? '–'}</td>
-                <td className="mono num">{c.false_positives}</td>
+                <td className={c.error ? 'warn' : c.top1_correct ? 'ok' : 'bad'}>{c.error ? '! error' : c.top1_correct ? '✓ correct' : '✗ wrong'}</td>
+                <td className="mono num">{c.error ? '' : c.correct_rank ?? 'not found'}</td>
+                <td className="mono num">{c.error ? '' : c.false_positives}</td>
                 <td className="mono num">
                   {secs(c.time_ms)}
                   {c.cached && <span className="dim"> cached</span>}
@@ -142,12 +159,13 @@ function AccuracyBars({ runs, active }) {
         ))}
         {runs.map((r, i) => {
           const y = i * rowH + 6;
-          const w = Math.max(r.totals.top1_accuracy * barMax, 2);
-          const correct = r.cases.filter((c) => c.top1_correct).length;
+          const t = summarize(r);
+          const w = Math.max(t.accuracy * barMax, 2);
+          const correct = t.correct;
           return (
             <g
               key={r.mode}
-              onMouseEnter={() => setHover({ r, correct, y })}
+              onMouseEnter={() => setHover({ r, correct, completed: t.completed, errors: t.errors, y })}
               onMouseLeave={() => setHover(null)}
             >
               <rect x={0} y={y - 4} width={width} height={rowH} className="hit" />
@@ -156,7 +174,7 @@ function AccuracyBars({ runs, active }) {
               </text>
               <rect x={labelW} y={y + 2} width={w} height={12} rx={4} className={`bar ${r.mode === active ? 'active' : ''}`} />
               <text x={labelW + w + 8} y={y + 12} className="bval">
-                {pct(r.totals.top1_accuracy)}
+                {t.completed ? `${pct(t.accuracy)} (${t.correct}/${t.completed})` : 'no data'}
               </text>
             </g>
           );
@@ -164,7 +182,7 @@ function AccuracyBars({ runs, active }) {
       </svg>
       {hover && (
         <div className="bars-tip mono" style={{ top: hover.y }}>
-          {MODE_LABEL[hover.r.mode] || hover.r.mode}: {hover.correct}/{hover.r.cases.length} correct · avg {secs(hover.r.totals.avg_time_ms)}
+          {MODE_LABEL[hover.r.mode] || hover.r.mode}: {hover.correct}/{hover.completed} correct{hover.errors ? ` · ${hover.errors} errored` : ''}
         </div>
       )}
     </div>

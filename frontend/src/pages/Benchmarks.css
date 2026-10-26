@@ -53,3 +53,4 @@
   .bars-tip { left: 8px; }
   .bench-table { min-width: 560px; }
 }
+.bench-table td.warn { color: var(--warning); white-space: nowrap; }
