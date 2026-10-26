@@ -218,6 +218,7 @@ export default function Workspace() {
   const selHyp = hyps[selected] || null;
   const patchHyp = selHyp?.patch ? selHyp : hyps.find((h) => h.patch) || null;
   const busy = phase === 'ingesting' || phase === 'diagnosing';
+  const elapsed = useElapsed(busy || probing);
   const label = repoLabel(repoUrl, branch);
   const [badge, badgeCls] = PHASE_BADGE[phase];
 
@@ -248,7 +249,7 @@ export default function Workspace() {
             {engineText}
           </span>
           <Button size="sm" onClick={runProbes} disabled={!hyps.length || probing || busy} title="Run probes (P)">
-            {probing ? 'Probing…' : 'Run probes'}
+            {probing ? `Probing… ${elapsed}s` : 'Run probes'}
           </Button>
           <ShortcutsPopover open={shortcutsOpen} setOpen={setShortcutsOpen} />
         </div>
@@ -355,7 +356,9 @@ export default function Workspace() {
                 <div className="progress mono">
                   {phase === 'ingesting'
                     ? 'Reading repository…'
-                    : `Read ${ingestData?.files.length ?? 0} files${ingestData?.redactions ? ` · ${ingestData.redactions} secrets masked` : ''} · asking model…`}
+                    : `Read ${ingestData?.files.length ?? 0} files${ingestData?.redactions ? ` · ${ingestData.redactions} secrets masked` : ''} · model is reasoning…`}
+                  <span className="dim"> {elapsed}s</span>
+                  {elapsed > 20 && <div className="dim">Gemma thinks before answering; a full diagnosis usually takes 30–90s.</div>}
                 </div>
                 {[0, 1, 2].map((i) => (
                   <div className="hyp skeleton-card" key={i}>
@@ -530,4 +533,16 @@ function CopyButton({ text }) {
       {done ? 'copied' : 'copy diff'}
     </button>
   );
+}
+
+// Seconds since `active` became true; resets when it turns false.
+function useElapsed(active) {
+  const [s, setS] = useState(0);
+  useEffect(() => {
+    if (!active) return setS(0);
+    const t0 = Date.now();
+    const id = setInterval(() => setS(Math.floor((Date.now() - t0) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return s;
 }
