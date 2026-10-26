@@ -4,7 +4,7 @@ const config = require('./config');
 const pool = new Pool({
   connectionString: config.databaseUrl,
   connectionTimeoutMillis: 5000,
-  ssl: config.databaseUrl ? { rejectUnauthorized: false } : false,
+  ssl: /sslmode=require/.test(config.databaseUrl || '') ? { rejectUnauthorized: false } : false,
 });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
