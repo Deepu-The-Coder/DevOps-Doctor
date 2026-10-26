@@ -22,14 +22,43 @@ export default function AccountMenu() {
   const ref = useOutsideClose(open, () => setOpen(false));
   const { pathname, search } = useLocation();
 
-  if (loading || !configured) return null;
+  if (loading) return null;
 
-  if (!user)
+  if (!user && configured)
     return (
       <a className="btn btn-secondary btn-sm signin-btn" href={loginUrl(pathname + search)}>
         <GitHubMark size={14} />
-        <span className="signin-label">Sign in</span>
+        <span className="signin-label">Sign in with GitHub</span>
       </a>
+    );
+
+  // Not configured on this server: keep the button visible and explain the setup.
+  if (!user)
+    return (
+      <div className="popover-wrap" ref={ref}>
+        <button type="button" className="btn btn-secondary btn-sm signin-btn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <GitHubMark size={14} />
+          <span className="signin-label">Sign in with GitHub</span>
+        </button>
+        {open && (
+          <div className="popover account-pop" role="dialog" aria-label="GitHub sign-in setup">
+            <div className="account-name">GitHub sign-in isn't set up on this server</div>
+            <ol className="account-steps">
+              <li>
+                Create an OAuth App at <span className="mono">github.com/settings/developers</span>
+              </li>
+              <li>
+                Callback URL: <span className="mono">{window.location.origin}/api/auth/github/callback</span>
+              </li>
+              <li>
+                Add <span className="mono">GITHUB_CLIENT_ID</span> and <span className="mono">GITHUB_CLIENT_SECRET</span> to{' '}
+                <span className="mono">backend/.env</span> and restart the backend.
+              </li>
+            </ol>
+            <p className="account-note">Public repos work without signing in.</p>
+          </div>
+        )}
+      </div>
     );
 
   return (

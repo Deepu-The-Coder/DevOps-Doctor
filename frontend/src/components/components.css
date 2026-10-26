@@ -245,3 +245,6 @@ a.btn:hover { text-decoration: none; }
   .signin-btn { width: 28px; padding: 0; }
   .repo-link { display: none; }
 }
+.account-steps { margin: 8px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.6; }
+.account-steps .mono { font-size: 11px; word-break: break-all; }
+.account-pop { width: 300px; max-width: calc(100vw - 24px); }
