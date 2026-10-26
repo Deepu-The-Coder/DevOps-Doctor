@@ -68,6 +68,7 @@ export default function Benchmarks() {
 
       <section className="bench-section">
         <h2 className="section-label">Per case · {MODE_LABEL[run.mode] || run.mode}</h2>
+        <div className="bench-table-wrap">
         <table className="bench-table">
           <thead>
             <tr>
@@ -95,6 +96,7 @@ export default function Benchmarks() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   );

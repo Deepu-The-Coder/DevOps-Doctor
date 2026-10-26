@@ -40,3 +40,16 @@
 .bench-table td.ok { color: var(--success); white-space: nowrap; }
 .bench-table td.bad { color: var(--danger); white-space: nowrap; }
 .bench-table .title-cell { color: var(--text-muted); }
+
+.bench-table-wrap { overflow-x: auto; }
+@media (max-width: 760px) {
+  .bench-page { padding: 20px 16px 32px; }
+  .stats { grid-template-columns: 1fr; }
+  .stat { border-right: 0; border-bottom: 1px solid var(--border); }
+  .stat:last-child { border-bottom: 0; }
+  .bench-modes { width: 100%; grid-template-columns: repeat(3, 1fr); }
+  .bench-modes button { padding: 0 4px; }
+  .bars-wrap { padding: 8px; }
+  .bars-tip { left: 8px; }
+  .bench-table { min-width: 560px; }
+}

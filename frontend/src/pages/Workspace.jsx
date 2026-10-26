@@ -53,6 +53,7 @@ export default function Workspace() {
   const [logFocus, setLogFocus] = useState(null);
   const [selected, setSelected] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [pane, setPane] = useState('case'); // which column shows on narrow screens
 
   const abortRef = useRef(null);
   const cardRefs = useRef([]);
@@ -111,9 +112,11 @@ export default function Workspace() {
     if (ev.type === 'log') {
       setEditingLogs(false);
       setLogFocus(ev.line);
+      setPane('case');
     } else {
       setFile({ path: ev.path, line: ev.line });
       setTab('files');
+      setPane('evidence');
     }
   }, []);
 
@@ -136,6 +139,7 @@ export default function Workspace() {
     setEditingLogs(false);
     try {
       setPhase('ingesting');
+      setPane('diagnosis');
       const ing = await api.ingest({ repoUrl, branch }, ctrl.signal);
       setIngestData(ing);
       setPhase('diagnosing');
@@ -159,6 +163,7 @@ export default function Workspace() {
   const runProbes = useCallback(async () => {
     if (!hyps.length || probing) return;
     setTab('probes');
+    setPane('evidence');
     setProbing(true);
     setProbeEvents([]);
     try {
@@ -255,7 +260,19 @@ export default function Workspace() {
         </div>
       </div>
 
-      <div className="ws-cols">
+      <div className="ws-panes segmented" role="tablist" aria-label="Workspace panel">
+        {[
+          ['case', 'Case'],
+          ['diagnosis', hyps.length ? `Diagnosis (${hyps.length})` : 'Diagnosis'],
+          ['evidence', 'Evidence'],
+        ].map(([id, t]) => (
+          <button key={id} type="button" role="tab" aria-selected={pane === id} className={pane === id ? 'on' : ''} onClick={() => setPane(id)}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div className={`ws-cols pane-${pane}`}>
         {/* LEFT: case setup */}
         <aside className="ws-left">
           <div className="col-head">
@@ -403,6 +420,7 @@ export default function Workspace() {
                     onShowPatch={() => {
                       setSelected(i);
                       setTab('patch');
+                      setPane('evidence');
                     }}
                   />
                 ))}

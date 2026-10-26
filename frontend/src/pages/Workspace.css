@@ -111,3 +111,27 @@
   .ws-right { width: 340px; }
   .col-head-right { display: none; }
 }
+
+/* ---- Narrow screens: one column at a time, chosen with the pane switcher. */
+.ws-panes { display: none; }
+@media (max-width: 1023px) {
+  .ws-panes { display: grid; grid-template-columns: repeat(3, 1fr); margin: 8px 12px; flex-shrink: 0; }
+  .ws-cols > aside, .ws-cols > section { display: none; width: 100% !important; border-right: 0; }
+  .ws-cols.pane-case .ws-left,
+  .ws-cols.pane-diagnosis .ws-center,
+  .ws-cols.pane-evidence .ws-right { display: flex; }
+  .ws-list { padding: 12px; }
+}
+@media (max-width: 760px) {
+  .ws-toolbar { padding: 0 8px 0 12px; gap: 6px; }
+  .ws-crumb { max-width: none; flex: 1; min-width: 0; }
+  .ws-toolbar .badge:not(:first-of-type), .engine, .ws-toolbar .popover-wrap { display: none; }
+  .ws-toolbar .badge { display: none; }
+  .statusbar { overflow-x: auto; }
+  .sb-right { display: none; }
+  .hyp-conf { margin-left: 0; width: 100%; justify-content: flex-start; }
+  .conf { flex: 1; width: auto; max-width: 220px; }
+  .hyp-actions { margin-left: 0; }
+  .btn-kbd, .tab-key { display: none; }
+  .input, .file-select, textarea.input { font-size: 16px; } /* stops iOS zoom on focus */
+}

@@ -1,0 +1,63 @@
+.ov-page { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.ov { max-width: 1160px; width: 100%; margin: 0 auto; padding: 32px 32px 16px; font-size: 14px; line-height: 1.6; }
+
+.ov-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 32px; align-items: start; }
+.ov-hero h1 { margin: 0 0 8px; font-size: 24px; font-weight: 600; }
+.ov-lede { margin: 0 0 8px; font-size: 15px; }
+.ov-sub { margin: 0 0 20px; color: var(--text-muted); }
+.ov-cta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ov-preview { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); overflow: hidden; }
+.ov-preview-head { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--border); background: var(--bg-subtle); }
+.ov-preview-head .mono { font-size: 11px; }
+.ov-preview-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ov-preview .hyp { padding: 10px; }
+.ov-preview .hyp.top { padding-left: 8px; }
+.ov-preview .hyp-foot { margin-top: 8px; padding-top: 6px; }
+
+.ov-section { margin-top: 40px; }
+.ov-section h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.ov-section-sub { margin: 0 0 12px; color: var(--text-muted); }
+
+.ov-causes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.ov-cause { display: flex; flex-direction: column; color: var(--text); border-right: 1px solid var(--border); transition: background 120ms ease; }
+.ov-cause:last-child { border-right: 0; }
+.ov-cause:hover { text-decoration: none; background: var(--bg-subtle); }
+.ov-symptom { padding: 10px 12px; font-size: 12px; line-height: 18px; color: var(--danger); background: var(--bg-inset); border-bottom: 1px solid var(--border); }
+.ov-cause-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.ov-cause-top { display: flex; justify-content: space-between; align-items: center; }
+.ov-cause-top .mono { font-size: 11px; }
+.ov-cause-text { font-size: 13px; }
+.ov-where { font-size: 11px; margin-top: auto; }
+
+.ov-steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--border); border-radius: var(--radius); }
+.ov-steps li { padding: 12px 14px; border-right: 1px solid var(--border); }
+.ov-steps li:last-child { border-right: 0; }
+.ov-step-n { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border: 1px solid var(--accent); color: var(--accent); border-radius: var(--radius-sm); font-size: 11px; }
+.ov-step-title { font-weight: 600; margin: 8px 0 2px; font-size: 13px; }
+.ov-step-text { color: var(--text-muted); font-size: 13px; }
+
+.table-scroll { overflow-x: auto; }
+.ov-compare { width: 100%; border-collapse: collapse; margin-top: 12px; border: 1px solid var(--border); font-size: 13px; }
+.ov-compare th, .ov-compare td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border-muted); vertical-align: top; }
+.ov-compare thead th { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); background: var(--bg-subtle); border-bottom: 1px solid var(--border); }
+.ov-compare tbody th { font-weight: 500; white-space: nowrap; width: 1%; }
+.ov-compare td:first-of-type { color: var(--text-muted); }
+
+.ov-safety { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ov-safety li { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; }
+.ov-safety .mono { display: block; font-size: 11px; color: var(--accent); margin-bottom: 2px; }
+.ov-more { color: var(--text-muted); margin-top: 16px; }
+
+@media (max-width: 960px) {
+  .ov-hero { grid-template-columns: 1fr; }
+  .ov-causes, .ov-steps { grid-template-columns: 1fr 1fr; }
+  .ov-cause:nth-child(2n), .ov-steps li:nth-child(2n) { border-right: 0; }
+  .ov-cause:nth-child(-n + 2), .ov-steps li:nth-child(-n + 2) { border-bottom: 1px solid var(--border); }
+}
+@media (max-width: 600px) {
+  .ov { padding: 20px 16px 8px; }
+  .ov-causes, .ov-steps, .ov-safety { grid-template-columns: 1fr; }
+  .ov-cause, .ov-steps li { border-right: 0; border-bottom: 1px solid var(--border); }
+  .ov-cause:last-child, .ov-steps li:last-child { border-bottom: 0; }
+}
