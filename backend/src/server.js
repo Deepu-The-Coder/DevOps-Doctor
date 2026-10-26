@@ -1,3 +1,4 @@
+import './netRetry.js';
 import express from 'express';
 import cors from 'cors';
 import { ingestRepo, httpError } from './github.js';
@@ -121,7 +122,8 @@ app.post('/api/probe', async (req, res, next) => {
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   if (status >= 500) console.error(err);
-  res.status(status).json({ error: err.message || 'internal error' });
+  const msg = err.message === 'fetch failed' ? `Network error: ${err.cause?.code || 'could not reach an external service'}. Check your connection and retry.` : err.message;
+  res.status(status).json({ error: msg || 'internal error' });
 });
 
 const port = Number(process.env.PORT) || 8787;
