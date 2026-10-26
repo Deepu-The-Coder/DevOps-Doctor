@@ -85,3 +85,11 @@ Overview page and deploy config.
 three modes: `full`, `logs-only`, `full+probe`. A hypothesis is correct when its title +
 reasoning match the case's `match` regex. Writes `frontend/public/eval-results.json` (read by
 /benchmarks) and a timestamped copy in `eval/results/`. Options: `--modes`, `--cases`, `--api`.
+
+## Edit & commit
+Signed-in users can commit a patch from the Patch tab. `POST /api/github/file` loads the
+real (unredacted) file with the user's token; the patch is applied client-side with a
+tolerant hunk matcher and shown in an editable editor with a live diff. `POST
+/api/github/commit` writes it via the Contents API: to a new branch (default,
+`devopsdoctor/<slug>`, optional pull request) or directly to the loaded branch, with a
+stale-file check. Content containing `[REDACTED…]` placeholders is refused.

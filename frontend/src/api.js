@@ -75,3 +75,12 @@ export async function myRepos() {
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data.repos;
 }
+
+// ---- Edit & commit (signed-in users only)
+export async function readFile({ repoUrl, branch, path }) {
+  return (await post('/api/github/file', { repoUrl, branch, path })).json();
+}
+
+export async function commitFile(body) {
+  return (await post('/api/github/commit', body)).json();
+}

@@ -140,7 +140,12 @@ export default function HowItWorks() {
           </table>
           <h3>Safety model</h3>
           <ul>
-            <li>Only the 4 tools above exist. Nothing executes shell commands, writes files, or applies patches.</li>
+            <li>Only the 4 tools above exist. Probes never execute shell commands or write anything.</li>
+            <li>
+              Patches are written to GitHub only from the Patch tab: you sign in, the real file is loaded, the patch is
+              applied for you to edit, you review the diff, and you press Commit (to a new branch with an optional pull
+              request, by default). Content still holding a <span className="mono">[REDACTED]</span> placeholder is refused.
+            </li>
             <li>Network probes only reach hosts or IPs that literally appear in the repo files or the log.</li>
             <li>Private, loopback, link-local, CGNAT and multicast addresses are refused, including after DNS resolution.</li>
             <li>Secrets are masked before anything is sent to the model.</li>

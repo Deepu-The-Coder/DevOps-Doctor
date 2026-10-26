@@ -7,6 +7,7 @@ import HypothesisCard from '../components/HypothesisCard.jsx';
 import ProbeTimeline from '../components/ProbeTimeline.jsx';
 import ShortcutsPopover from '../components/ShortcutsPopover.jsx';
 import RepoPicker from '../components/RepoPicker.jsx';
+import CommitPanel from '../components/CommitPanel.jsx';
 import { useAuth } from '../auth.js';
 import { loginUrl } from '../api.js';
 import { CodeViewer, DiffViewer, LogViewer } from '../components/viewers.jsx';
@@ -58,7 +59,8 @@ export default function Workspace() {
   const [logFocus, setLogFocus] = useState(null);
   const [selected, setSelected] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [pane, setPane] = useState('case'); // which column shows on narrow screens
+  const [pane, setPane] = useState('case');
+  const [committing, setCommitting] = useState(false); // Patch tab shows the edit & commit panel // which column shows on narrow screens
 
   const abortRef = useRef(null);
   const cardRefs = useRef([]);
@@ -141,6 +143,7 @@ export default function Workspace() {
     setDeltas({});
     setProbeEvents([]);
     setSelected(0);
+    setCommitting(false);
     setEditingLogs(false);
     try {
       setPhase('ingesting');
@@ -511,7 +514,16 @@ export default function Workspace() {
               ))}
 
             {tab === 'patch' &&
-              (patchHyp ? (
+              (patchHyp && committing ? (
+                <CommitPanel
+                  key={patchHyp.id + patchHyp.patch.path}
+                  repoUrl={repoUrl}
+                  branch={branch}
+                  patch={patchHyp.patch}
+                  hypothesis={patchHyp}
+                  onClose={() => setCommitting(false)}
+                />
+              ) : patchHyp ? (
                 <>
                   <div className="subbar mono">
                     <span>
@@ -521,7 +533,18 @@ export default function Workspace() {
                     <CopyButton text={patchHyp.patch.diff} />
                   </div>
                   <DiffViewer diff={patchHyp.patch.diff} />
-                  <div className="panel-foot">Suggested only. DevOpsDoctor never applies patches.</div>
+                  <div className="patch-actions">
+                    <span>Nothing is written until you review and commit.</span>
+                    {auth.user ? (
+                      <Button size="sm" variant="primary" onClick={() => setCommitting(true)}>
+                        Edit &amp; commit
+                      </Button>
+                    ) : (
+                      <a className="btn btn-secondary btn-sm" href={auth.configured ? loginUrl(`/app${caseId ? `?case=${caseId}` : ''}`) : undefined} title={auth.configured ? '' : 'GitHub sign-in is not set up on this server'}>
+                        Sign in to commit
+                      </a>
+                    )}
+                  </div>
                 </>
               ) : (
                 <EmptyState title="No patch">{hyps.length ? 'No hypothesis suggested a patch.' : 'Run a diagnosis first.'}</EmptyState>

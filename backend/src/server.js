@@ -7,6 +7,7 @@ import { runProbeLoop } from './probes.js';
 import { modelInfo } from './model.js';
 import { cacheKey, readCache, writeCache } from './cache.js';
 import { authRouter, githubTokenFor, listUserRepos } from './auth.js';
+import { readFileForEdit, commitFile } from './commit.js';
 
 const app = express();
 const origins = (process.env.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
@@ -19,6 +20,8 @@ const MAX_LOG_CHARS = 500_000;
 app.get('/api/health', (req, res) => res.json({ ok: true, ...modelInfo() }));
 app.use('/api/auth', authRouter);
 app.get('/api/github/repos', (req, res, next) => listUserRepos(req, res).catch(next));
+app.post('/api/github/file', (req, res, next) => readFileForEdit(req, res).catch(next));
+app.post('/api/github/commit', (req, res, next) => commitFile(req, res).catch(next));
 
 // 1. Ingest: read the repo and return the (redacted) files the model will see.
 app.post('/api/ingest', async (req, res, next) => {

@@ -51,7 +51,8 @@ Goals
 
 Non-goals
 - Auth, accounts, teams, billing, persistence beyond localStorage.
-- Auto-applying patches or opening PRs.
+- Auto-applying patches. (Committing a reviewed patch to GitHub, to a new branch
+  with an optional PR, was added later at the team's request.)
 - Supporting private repos beyond GITHUB_TOKEN.
 - Mobile-first design. Must not break below 1024px, but desktop is the target.
 

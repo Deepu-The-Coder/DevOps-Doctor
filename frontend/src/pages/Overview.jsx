@@ -76,7 +76,7 @@ const SAFETY = [
   ['allowlist', 'Only 4 probe tools exist: dns_lookup, tcp_connect, http_get, read_file. All read-only.'],
   ['hosts', 'Network probes only reach hosts named in the repo or logs. Private and loopback addresses are refused.'],
   ['secrets', 'Passwords, tokens and keys are masked before anything reaches the model. .env files are never read.'],
-  ['no exec', 'Nothing runs shell commands, writes files or applies patches. Patches are suggestions.'],
+  ['you commit', 'Nothing runs shell commands. A patch is only written to GitHub after you sign in, review the diff and press Commit, by default to a new branch.'],
 ];
 
 export default function Overview() {
