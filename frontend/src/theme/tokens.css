@@ -18,6 +18,10 @@
   --diff-del-bg: rgba(248, 81, 73, 0.15);
   --highlight-line: rgba(187, 128, 9, 0.15);
   --focus-ring: #2f81f7;
+  --text-dim: #6e7681;
+  --accent-subtle: rgba(47, 129, 247, 0.12);
+  --surface-raised: #21262d;
+  --popover-shadow: 0 8px 24px rgba(1, 4, 9, 0.6);
 
   --tag-network-bg: rgba(56, 139, 253, 0.15);
   --tag-network-fg: #79c0ff;
@@ -51,6 +55,10 @@
   --diff-del-bg: #ffebe9;
   --highlight-line: #fff8c5;
   --focus-ring: #0969da;
+  --text-dim: #6e7781;
+  --accent-subtle: #ddf4ff;
+  --surface-raised: #eaeef2;
+  --popover-shadow: 0 8px 24px rgba(140, 149, 159, 0.25);
 
   --tag-network-bg: #ddf4ff;
   --tag-network-fg: #0550ae;

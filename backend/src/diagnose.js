@@ -131,7 +131,7 @@ function findLine(lines, quote) {
 const norm = (s) => String(s).replace(/\s+/g, ' ').trim().toLowerCase();
 const looseIncludes = (line, quote) => norm(line).includes(norm(quote));
 const cleanPath = (p) => String(p || '').replace(/^\.?\/+/, '').trim();
-const clamp01 = (n) => (Number.isFinite(n) ? Math.min(1, Math.max(0, n > 1 && n <= 100 ? n / 100 : n)) : 0);
+const clamp01 = (n) => (Number.isFinite(n) ? Math.round(Math.min(1, Math.max(0, n > 1 && n <= 100 ? n / 100 : n)) * 100) / 100 : 0);
 const describeRef = (ev) => (ev?.type === 'log' ? `log L${ev?.line}` : `${ev?.path}:${ev?.line}`);
 
 // ---- Dev-only mock, used when LLM_MOCK=1. Clearly labelled in the UI.
