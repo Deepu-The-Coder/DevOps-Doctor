@@ -1,0 +1,332 @@
+{
+  "generated_at": "2026-10-26T09:53:29.755Z",
+  "model": "gemma-4-26b-a4b-it",
+  "api": "http://localhost:8787",
+  "fp_threshold": 0.5,
+  "runs": [
+    {
+      "mode": "full",
+      "cases": [
+        {
+          "case": "case-a",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "Environment variable name mismatch between code and compose",
+          "time_ms": 242551,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Environment variable name mismatch between code and compose",
+              "category": "env",
+              "confidence": 1,
+              "reasoning": "The code in `src/config.js` attempts to read `process.env.DB_URL`, but `docker-compose.yml` defines the connection string as `DATABASE_URL`. This causes the `pg` client to fall back to the default host `127.0.0.1`, which is not where the database is running."
+            },
+            {
+              "title": "Database service not reachable via network",
+              "category": "network",
+              "confidence": 0.1,
+              "reasoning": "The application is unable to reach the database host. However, the logs show the connection attempt is directed at `127.0.0.1` rather than the `db` service hostname, suggesting a configuration error rather than a network partition."
+            }
+          ]
+        },
+        {
+          "case": "case-b",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 1,
+          "top1_title": "DATABASE_URL is provided as a build argument instead of a runtime environment variable",
+          "time_ms": 216720,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "DATABASE_URL is provided as a build argument instead of a runtime environment variable",
+              "category": "env",
+              "confidence": 0.95,
+              "reasoning": "The DATABASE_URL is defined under 'args' in docker-compose.yml and 'ARG' in the Dockerfile, making it a build-time variable. The application attempts to read it from 'process.env.DATABASE_URL' at runtime, which is empty because it was not provided in the 'environment' section."
+            },
+            {
+              "title": "pg driver defaults to localhost when connection string is undefined",
+              "category": "code",
+              "confidence": 0.8,
+              "reasoning": "When the connection string is undefined (due to the missing environment variable), the 'pg' library defaults to connecting to 'localhost:5432'. This is confirmed by the error log showing a connection refusal at 127.0.0.1."
+            },
+            {
+              "title": "Service 'db' is unreachable from 'orders-api' via network",
+              "category": "network",
+              "confidence": 0.2,
+              "reasoning": "While the logs show the 'db' container is healthy, there could be a network configuration issue preventing the 'orders-api' container from resolving the 'db' hostname."
+            }
+          ]
+        },
+        {
+          "case": "case-c",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "Incorrect database host in DATABASE_URL",
+          "time_ms": 324243,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Incorrect database host in DATABASE_URL",
+              "category": "config",
+              "confidence": 0.95,
+              "reasoning": "The DATABASE_URL in docker-compose.yml points to an external IP (203.0.113.24) instead of the 'db' service name defined in the same compose file. This causes a connection timeout as the container attempts to reach an address outside the Docker network."
+            },
+            {
+              "title": "External database is unreachable",
+              "category": "network",
+              "confidence": 0.04,
+              "reasoning": "If the external IP 203.0.113.24 was intended, the connection timeout suggests that the network path is blocked by a firewall or the host is unreachable from the container network."
+            },
+            {
+              "title": "Missing POSTGRES_PASSWORD environment variable",
+              "category": "env",
+              "confidence": 0.01,
+              "reasoning": "The DATABASE_URL relies on the ${POSTGRES_PASSWORD} variable. If this variable is not set in the shell environment during deployment, the connection string will be malformed."
+            }
+          ]
+        },
+        {
+          "case": "case-d",
+          "top1_correct": false,
+          "correct_rank": null,
+          "false_positives": 0,
+          "time_ms": 189227,
+          "error": "Model API 500: [{ \"error\": { \"code\": 500, \"message\": \"Internal error encountered.\", \"status\": \"INTERNAL\" } } ]"
+        }
+      ],
+      "totals": {
+        "top1_accuracy": 0.75,
+        "avg_time_ms": 261171,
+        "false_positives": 1,
+        "errors": 1
+      }
+    },
+    {
+      "mode": "logs-only",
+      "cases": [
+        {
+          "case": "case-a",
+          "top1_correct": false,
+          "correct_rank": null,
+          "false_positives": 2,
+          "top1_title": "Database host configured as localhost",
+          "time_ms": 78019,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Database host configured as localhost",
+              "category": "env",
+              "confidence": 0.95,
+              "reasoning": "The application is attempting to connect to 127.0.0.1, which in a Dockerized environment refers to the container itself rather than the database container. The database is running in a separate container named orders-db-1."
+            },
+            {
+              "title": "Health check failure is a symptom of application crash",
+              "category": "platform",
+              "confidence": 0.85,
+              "reasoning": "The health check fails because the application process has already exited with code 1 due to the fatal database connection error."
+            },
+            {
+              "title": "Database service unreachable via network",
+              "category": "network",
+              "confidence": 0.15,
+              "reasoning": "While the database container is reported as healthy, there could be a network isolation issue preventing the API container from communicating with it."
+            }
+          ]
+        },
+        {
+          "case": "case-b",
+          "top1_correct": false,
+          "correct_rank": null,
+          "false_positives": 1,
+          "top1_title": "Database host configured as localhost instead of service name",
+          "time_ms": 86991,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Database host configured as localhost instead of service name",
+              "category": "env",
+              "confidence": 0.95,
+              "reasoning": "The application is attempting to connect to 127.0.0.1:5432, which refers to the loopback interface of the orders-api container itself. In a Docker Compose environment, the application should use the service name 'orders-db' to reach the database container."
+            },
+            {
+              "title": "Health check failure due to application crash",
+              "category": "platform",
+              "confidence": 0.04,
+              "reasoning": "The deployment fails because the health check on port 8080 is refused, but this is a secondary symptom of the application exiting after the database connection retries fail."
+            },
+            {
+              "title": "Network isolation between containers",
+              "category": "network",
+              "confidence": 0.01,
+              "reasoning": "While the error is specifically a connection refusal to 127.0.0.1, a failure to communicate between containers could be caused by them not being on the same Docker network."
+            }
+          ]
+        },
+        {
+          "case": "case-c",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "Incorrect database host configuration",
+          "time_ms": 152066,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Incorrect database host configuration",
+              "category": "env",
+              "confidence": 0.7,
+              "reasoning": "The application experiences connection timeouts when attempting to reach the database. In a Docker environment, this is frequently caused by the application attempting to connect to 'localhost' instead of the service name 'orders-db'."
+            },
+            {
+              "title": "Database port mismatch",
+              "category": "config",
+              "confidence": 0.2,
+              "reasoning": "The database container is reported as healthy, but the API cannot connect. This could indicate that the application is targeting a different port than the one the database is actually listening on."
+            },
+            {
+              "title": "Database listening on loopback interface only",
+              "category": "config",
+              "confidence": 0.1,
+              "reasoning": "While the database container is healthy, it may be configured to listen only on 127.0.0.1, which prevents other containers on the same network from reaching it."
+            }
+          ]
+        },
+        {
+          "case": "case-d",
+          "top1_correct": false,
+          "correct_rank": null,
+          "false_positives": 1,
+          "top1_title": "Incorrect database host configuration",
+          "time_ms": 82207,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Incorrect database host configuration",
+              "category": "env",
+              "confidence": 0.7,
+              "reasoning": "The database container is reported as healthy (L10), but the API fails all connection attempts (L15-L19). In a Docker environment, this often occurs when the application attempts to connect to 'localhost' instead of the service name 'orders-db'."
+            },
+            {
+              "title": "Database readiness race condition",
+              "category": "platform",
+              "confidence": 0.2,
+              "reasoning": "The database container is marked healthy (L10), but the API's connection attempts are terminated unexpectedly (L15). The database health check might be passing as soon as the process starts, before the engine is actually ready to accept socket connections."
+            },
+            {
+              "title": "Dependency engine mismatch",
+              "category": "dependency",
+              "confidence": 0.1,
+              "reasoning": "The 'pg' package reports an unsupported engine warning (L4) for the current Node.js version. While the version requirement is technically met, this mismatch could lead to unstable connection behavior."
+            }
+          ]
+        }
+      ],
+      "totals": {
+        "top1_accuracy": 0.25,
+        "avg_time_ms": 99821,
+        "false_positives": 4,
+        "errors": 0
+      }
+    },
+    {
+      "mode": "full+probe",
+      "cases": [
+        {
+          "case": "case-a",
+          "top1_correct": false,
+          "correct_rank": null,
+          "false_positives": 0,
+          "time_ms": 475092,
+          "error": "Model timed out after 240s"
+        },
+        {
+          "case": "case-b",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "DATABASE_URL is missing from runtime environment",
+          "time_ms": 345319,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "DATABASE_URL is missing from runtime environment",
+              "category": "env",
+              "confidence": 1,
+              "reasoning": "The DATABASE_URL is defined under 'build.args' in docker-compose.yml (line 6), which makes it available only during the image build phase. In the Dockerfile, it is declared as an ARG (line 3) but is never converted to an ENV. Therefore, at runtime, process.env.DATABASE_URL is undefined. When the 'pg' library receives an undefined connection string, it defaults to connecting to '127.0.0.1:5432', which matches the connection error seen in the logs (L14: 'connect ECONNREFUSED 127.0.0.1:5432')."
+            }
+          ],
+          "probe_rounds": 1
+        },
+        {
+          "case": "case-c",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "Incorrect database host in DATABASE_URL",
+          "time_ms": 263932,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Incorrect database host in DATABASE_URL",
+              "category": "config",
+              "confidence": 1,
+              "reasoning": "The probe confirmed that 203.0.113.24:5432 is unreachable (timeout). Since the 'db' service is defined in the same docker-compose.yml, the application should be using the service name 'db' instead of the external IP to communicate within the Docker network."
+            },
+            {
+              "title": "Health check failure caused by application exit",
+              "category": "platform",
+              "confidence": 0,
+              "reasoning": "This is a symptom of the application failing to connect to the database and exiting, not the root cause of the deployment failure."
+            },
+            {
+              "title": "Database service lacks port exposure",
+              "category": "config",
+              "confidence": 0,
+              "reasoning": "In a Docker Compose environment, services on the same network can communicate using service names without needing to expose ports to the host. The issue is the incorrect host address in the application configuration."
+            }
+          ],
+          "probe_rounds": 1
+        },
+        {
+          "case": "case-d",
+          "top1_correct": true,
+          "correct_rank": 1,
+          "false_positives": 0,
+          "top1_title": "Outdated pg library incompatible with Postgres 16 authentication",
+          "time_ms": 406318,
+          "cached": false,
+          "hypotheses": [
+            {
+              "title": "Outdated pg library incompatible with Postgres 16 authentication",
+              "category": "dependency",
+              "confidence": 0.95,
+              "reasoning": "The error 'Connection terminated unexpectedly' is a classic symptom of a protocol mismatch during the authentication handshake. Postgres 16 defaults to SCRAM-SHA-256 authentication, which the very old 'pg' version 7.4.3 (found in package.json:14) does not support. This causes the server to close the connection when the client fails to handle the SCRAM request."
+            },
+            {
+              "title": "Missing POSTGRES_PASSWORD environment variable",
+              "category": "env",
+              "confidence": 0.05,
+              "reasoning": "If the password were missing or incorrect, the error would typically be 'password authentication failed' rather than 'Connection terminated unexpectedly'."
+            },
+            {
+              "title": "SSL mode mismatch",
+              "category": "config",
+              "confidence": 0.05,
+              "reasoning": "If SSL was required by the server but not provided by the client, the error would usually be 'no pg_hba.conf entry for host ... SSL off'."
+            }
+          ],
+          "probe_rounds": 1
+        }
+      ],
+      "totals": {
+        "top1_accuracy": 0.75,
+        "avg_time_ms": 338523,
+        "false_positives": 0,
+        "errors": 1
+      }
+    }
+  ]
+}
