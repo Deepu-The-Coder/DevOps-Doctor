@@ -264,3 +264,12 @@ a.btn:hover { text-decoration: none; }
 .commit-links { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; }
 .patch-actions { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid var(--border); flex-shrink: 0; font-size: 11px; color: var(--text-muted); }
 .patch-actions .btn { margin-left: auto; }
+
+/* Quick commit */
+.qc-pop { width: 300px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; gap: 8px; }
+.qc-title { font-weight: 600; font-size: 12px; }
+.qc-small { font-size: 12px; color: var(--text-muted); }
+.qc-dest { flex-direction: column; gap: 4px; }
+.qc-actions { display: flex; align-items: center; justify-content: space-between; }
+.hyp-actions { align-items: center; }
+.hyp-actions .btn-ghost { height: 22px; padding: 0 6px; font-size: 11px; font-family: var(--font-mono); color: var(--accent); }

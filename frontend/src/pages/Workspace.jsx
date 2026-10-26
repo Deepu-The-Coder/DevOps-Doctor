@@ -8,6 +8,7 @@ import ProbeTimeline from '../components/ProbeTimeline.jsx';
 import ShortcutsPopover from '../components/ShortcutsPopover.jsx';
 import RepoPicker from '../components/RepoPicker.jsx';
 import CommitPanel from '../components/CommitPanel.jsx';
+import QuickCommit from '../components/QuickCommit.jsx';
 import { useAuth } from '../auth.js';
 import { loginUrl } from '../api.js';
 import { CodeViewer, DiffViewer, LogViewer } from '../components/viewers.jsx';
@@ -189,6 +190,15 @@ export default function Workspace() {
     }
   }, [hyps, probing, repoUrl, branch, logs]);
 
+  // Opens the full Edit & commit panel for a hypothesis (used when a quick commit can't apply cleanly).
+  const openEditor = (h) => {
+    const i = hyps.indexOf(h);
+    if (i >= 0) setSelected(i);
+    setTab('patch');
+    setPane('evidence');
+    setCommitting(true);
+  };
+
   // Keyboard shortcuts. Refs keep the handler pointed at the latest callbacks.
   const handlers = useRef({});
   handlers.current = { run, runProbes };
@@ -261,6 +271,24 @@ export default function Workspace() {
             <span className={`dot ${engineState}`} />
             {engineText}
           </span>
+          {hyps.some((h) => h.patch) &&
+            (auth.user ? (
+              <QuickCommit
+                repoUrl={repoUrl}
+                branch={branch}
+                hypothesis={hyps.find((h) => h.patch)}
+                rank={hyps.findIndex((h) => h.patch) + 1}
+                onNeedsEdit={openEditor}
+              />
+            ) : (
+              <a
+                className="btn btn-primary btn-sm"
+                href={auth.configured ? loginUrl(`/app${caseId ? `?case=${caseId}` : ''}`) : undefined}
+                title={auth.configured ? 'Sign in with GitHub to commit fixes' : 'GitHub sign-in is not set up on this server'}
+              >
+                Sign in to commit
+              </a>
+            ))}
           <Button size="sm" onClick={runProbes} disabled={!hyps.length || probing || busy} title="Run probes (P)">
             {probing ? `Probing… ${elapsed}s` : 'Run probes'}
           </Button>
@@ -442,6 +470,11 @@ export default function Workspace() {
                     delta={deltas[h.id]}
                     onSelect={() => setSelected(i)}
                     onEvidence={openEvidence}
+                    commitSlot={
+                      h.patch && auth.user ? (
+                        <QuickCommit repoUrl={repoUrl} branch={branch} hypothesis={h} rank={i + 1} label="commit fix" variant="ghost" onNeedsEdit={openEditor} />
+                      ) : null
+                    }
                     onShowPatch={() => {
                       setSelected(i);
                       setTab('patch');

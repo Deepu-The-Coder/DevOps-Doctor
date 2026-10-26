@@ -15,7 +15,7 @@ export function hypothesisMarkdown(h, rank) {
 
 // Used live on /app and with static data on the Overview page.
 const HypothesisCard = forwardRef(function HypothesisCard(
-  { h, rank, delta, top, selected, onEvidence, onSelect, onShowPatch, compact },
+  { h, rank, delta, top, selected, onEvidence, onSelect, onShowPatch, compact, commitSlot },
   ref
 ) {
   const [copied, setCopied] = useState(false);
@@ -74,6 +74,7 @@ const HypothesisCard = forwardRef(function HypothesisCard(
                 view patch
               </button>
             )}
+            {commitSlot}
             <button type="button" className="link-btn" onClick={copy}>
               {copied ? 'copied' : 'copy as markdown'}
             </button>
