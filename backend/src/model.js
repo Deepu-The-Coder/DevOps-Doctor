@@ -22,7 +22,7 @@ export function modelInfo() {
   };
 }
 
-export async function chatJSON(messages, { timeoutMs = 240_000, retries = 1 } = {}) {
+export async function chatJSON(messages, { timeoutMs = 240_000, retries = 2 } = {}) {
   for (let attempt = 0; ; attempt++) {
     try {
       return await chatOnce(messages, timeoutMs);
@@ -57,6 +57,8 @@ async function chatOnce(messages, timeoutMs) {
         messages: /gemma/i.test(model) ? foldSystem(messages) : messages,
         temperature: 0.1,
         max_tokens: 12000,
+        // Stream so bytes keep flowing during long reasoning; idle connections get reset.
+        ...(process.env.MODEL_STREAM === '0' ? {} : { stream: true }),
         ...extraBody(),
       }),
     });
@@ -67,20 +69,73 @@ async function chatOnce(messages, timeoutMs) {
       e.transient = res.status >= 500 || res.status === 429;
       throw e;
     }
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content ?? '';
+    const { text, usage } = await readCompletion(res);
     if (process.env.MODEL_DEBUG === '1') console.log('[model raw]', text.slice(0, 3000));
-    return { json: extractJSON(text), usage: data.usage || null };
+    return { json: extractJSON(text), usage };
   } catch (err) {
     if (err.name === 'AbortError') {
       const e = new Error(`Model timed out after ${timeoutMs / 1000}s`);
       e.status = 504;
       throw e;
     }
+    if (err.message === 'fetch failed') {
+      // Network-level failure (DNS, reset, connect timeout): worth retrying.
+      const code = err.cause?.code || err.cause?.message || 'network error';
+      const e = new Error(`Could not reach the model API (${code}). Check your internet connection and retry.`);
+      e.status = 502;
+      e.transient = true;
+      e.cause = err;
+      console.error('[model] network error:', code);
+      throw e;
+    }
     throw err;
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Reads either a normal JSON completion or an SSE stream of chunks.
+async function readCompletion(res) {
+  const type = res.headers.get('content-type') || '';
+  if (!type.includes('event-stream')) {
+    const data = await res.json();
+    return { text: data.choices?.[0]?.message?.content ?? '', usage: data.usage || null };
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  let text = '';
+  let usage = null;
+  const handle = (line) => {
+    if (!line.startsWith('data:')) return;
+    const payload = line.slice(5).trim();
+    if (!payload || payload === '[DONE]') return;
+    try {
+      const chunk = JSON.parse(payload);
+      if (chunk.error) {
+        const e = new Error(`Model API stream error: ${JSON.stringify(chunk.error).slice(0, 200)}`);
+        e.status = 502;
+        e.transient = true;
+        throw e;
+      }
+      text += chunk.choices?.[0]?.delta?.content ?? chunk.choices?.[0]?.message?.content ?? '';
+      if (chunk.usage) usage = chunk.usage;
+    } catch (err) {
+      if (err.status) throw err;
+    }
+  };
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      handle(buf.slice(0, nl).trim());
+      buf = buf.slice(nl + 1);
+    }
+  }
+  handle(buf.trim());
+  return { text, usage };
 }
 
 // Models may add reasoning (<thought>…</thought>), prose or ``` fences around the JSON.
