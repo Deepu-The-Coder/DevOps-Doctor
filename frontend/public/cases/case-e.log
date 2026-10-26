@@ -1,0 +1,21 @@
+#1 [orders-api internal] load build definition from Dockerfile
+#2 [orders-api 1/5] FROM docker.io/library/node:20-alpine
+#5 [orders-api 3/5] RUN npm install --omit=dev
+#5 5.882 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory.
+#5 5.913 added 69 packages in 6s
+#7 [orders-api 5/5] COPY src ./src
+#8 exporting to image
+#8 naming to docker.io/library/orders-api:latest done
+ Container orders-db-1  Started
+ Container orders-db-1  Healthy
+ Container orders-api-1  Started
+orders-api-1  | 2026-10-26T12:02:10.118Z > orders-api@1.6.0 start
+orders-api-1  | 2026-10-26T12:02:10.119Z > node src/index.js
+orders-api-1  | 2026-10-26T12:02:10.402Z cache: redis unavailable (ECONNREFUSED 127.0.0.1:6379), falling back to in-memory cache
+orders-api-1  | 2026-10-26T12:02:10.405Z db: connecting
+orders-api-1  | 2026-10-26T12:02:10.468Z db: connected
+orders-api-1  | 2026-10-26T12:02:10.471Z orders-api listening on 3000
+orders-api-1  | 2026-10-26T12:02:12.003Z (node:1) [DEP0040] DeprecationWarning: The `punycode` module is deprecated.
+ Container orders-api-1  Unhealthy
+ERROR: service "orders-api" failed its health check 6 times (wget http://localhost:8080/health: connection refused)
+deploy failed: rolling back to previous image orders-api:1.5.3

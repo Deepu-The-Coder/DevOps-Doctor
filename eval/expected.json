@@ -1,10 +1,10 @@
 {
-  "_note": "Ground truth for the 4 planted bugs. A hypothesis counts as correct when its title + reasoning match `match` (case-insensitive regex). Edit freely.",
+  "_note": "Ground truth for the planted bugs. A hypothesis counts as correct when its title + reasoning match `match` (case-insensitive regex). case-a is pinned to the commit before DevOpsDoctor's own Commit fix landed on main (dac32fa).",
   "cases": [
     {
       "case": "case-a",
-      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-a",
-      "branch": "main",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/624ae96af15524625ebcd036abc8245c0a69621f/sample-app/case-a",
+      "branch": "624ae96af15524625ebcd036abc8245c0a69621f",
       "log": "frontend/public/cases/case-a.log",
       "category": "env",
       "root_cause": "Code reads DB_URL but docker-compose.yml sets DATABASE_URL.",
@@ -36,6 +36,33 @@
       "category": "dependency",
       "root_cause": "pg@7.4.3 is incompatible with Node 20 (pg < 8 breaks on Node >= 14).",
       "match": "pg@?7|7\\.4\\.3|pg (driver |client )?version|(outdated|old|incompatible) (pg|postgres|node-postgres|driver)|EBADENGINE"
+    },
+    {
+      "case": "case-e",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-e",
+      "branch": "main",
+      "log": "frontend/public/cases/case-e.log",
+      "category": "config",
+      "root_cause": "config.js reads HTTP_PORT (default 3000) but compose/Dockerfile set PORT=8080, so the app listens on 3000 and the health check on 8080 is refused. The Redis ECONNREFUSED warning is a red herring.",
+      "match": "HTTP_PORT|port 3000|on 3000|3000 (instead|rather|but)|(wrong|mismatch\\w*|incorrect|different) port|port (mismatch|misconfig)"
+    },
+    {
+      "case": "case-f",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-f",
+      "branch": "main",
+      "log": "frontend/public/cases/case-f.log",
+      "category": "dependency",
+      "root_cause": "dotenv is only in devDependencies and the Dockerfile runs npm install --omit=dev, so it is not installed in the image.",
+      "match": "devDependenc|dev[- ]dependenc|omit=dev|--production"
+    },
+    {
+      "case": "case-g",
+      "repoUrl": "https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/sample-app/case-g",
+      "branch": "main",
+      "log": "frontend/public/cases/case-g.log",
+      "category": "platform",
+      "root_cause": "The pgdata volume was initialised with the old password; POSTGRES_PASSWORD only applies on first init, so after rotation Postgres still expects the old one.",
+      "match": "volume|pgdata|skipping initiali[sz]ation|already initiali[sz]ed|first (init|start|run)|existing (data|database|data directory)"
     }
   ]
 }

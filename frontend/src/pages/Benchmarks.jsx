@@ -6,7 +6,7 @@ const MODE_LABEL = { full: 'Full context', 'logs-only': 'Logs only', 'full+probe
 const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 const secs = (ms) => (ms == null ? '–' : `${(ms / 1000).toFixed(1)}s`);
 
-// Accuracy over completed runs; provider errors are excluded and reported separately.
+// Accuracy over all cases: a provider error or timeout counts as a miss, as it would for a user.
 function summarize(run) {
   const ok = run.cases.filter((c) => !c.error);
   const correct = ok.filter((c) => c.top1_correct).length;
@@ -14,7 +14,8 @@ function summarize(run) {
     correct,
     completed: ok.length,
     errors: run.cases.length - ok.length,
-    accuracy: ok.length ? correct / ok.length : 0,
+    total: run.cases.length,
+    accuracy: run.cases.length ? correct / run.cases.length : 0,
     avg_time_ms: ok.length ? Math.round(ok.reduce((a, c) => a + c.time_ms, 0) / ok.length) : null,
     false_positives: ok.reduce((a, c) => a + c.false_positives, 0),
   };
@@ -58,7 +59,10 @@ export default function Benchmarks() {
         model {data.model || 'unknown'} · generated {new Date(data.generated_at).toLocaleString()} · false positive = wrong
         hypothesis with confidence ≥ {data.fp_threshold ?? 0.5}
       </p>
-      <div className="note warn honest">4 hand-built cases. Small sample; directional, not statistically significant.</div>
+      <div className="note warn honest">
+        {run.cases.length} hand-built cases, one run each. Small sample; directional, not statistically significant. API
+        errors and timeouts count as misses.
+      </div>
 
       <div className="segmented bench-modes" role="radiogroup" aria-label="Mode">
         {data.runs.map((r) => (
@@ -71,8 +75,8 @@ export default function Benchmarks() {
       <div className="stats">
         <Stat
           label="Top-1 accuracy"
-          value={t.completed ? pct(t.accuracy) : '–'}
-          sub={`${t.correct} of ${t.completed} completed${t.errors ? ` · ${t.errors} errored, excluded` : ''}`}
+          value={t.total ? pct(t.accuracy) : '–'}
+          sub={`${t.correct} of ${t.total} cases${t.errors ? ` · ${t.errors} errored, counted as misses` : ''}`}
         />
         <Stat label="Avg time to diagnosis" value={secs(t.avg_time_ms)} sub="per completed case, wall clock" />
         <Stat label="False positives" value={String(t.false_positives)} sub="across completed cases" />
@@ -165,7 +169,7 @@ function AccuracyBars({ runs, active }) {
           return (
             <g
               key={r.mode}
-              onMouseEnter={() => setHover({ r, correct, completed: t.completed, errors: t.errors, y })}
+              onMouseEnter={() => setHover({ r, correct, total: t.total, errors: t.errors, y })}
               onMouseLeave={() => setHover(null)}
             >
               <rect x={0} y={y - 4} width={width} height={rowH} className="hit" />
@@ -174,7 +178,7 @@ function AccuracyBars({ runs, active }) {
               </text>
               <rect x={labelW} y={y + 2} width={w} height={12} rx={4} className={`bar ${r.mode === active ? 'active' : ''}`} />
               <text x={labelW + w + 8} y={y + 12} className="bval">
-                {t.completed ? `${pct(t.accuracy)} (${t.correct}/${t.completed})` : 'no data'}
+                {t.total ? `${pct(t.accuracy)} (${t.correct}/${t.total})` : 'no data'}
               </text>
             </g>
           );
@@ -182,7 +186,7 @@ function AccuracyBars({ runs, active }) {
       </svg>
       {hover && (
         <div className="bars-tip mono" style={{ top: hover.y }}>
-          {MODE_LABEL[hover.r.mode] || hover.r.mode}: {hover.correct}/{hover.completed} correct{hover.errors ? ` · ${hover.errors} errored` : ''}
+          {MODE_LABEL[hover.r.mode] || hover.r.mode}: {hover.correct}/{hover.total} correct{hover.errors ? ` · ${hover.errors} errored (counted as misses)` : ''}
         </div>
       )}
     </div>

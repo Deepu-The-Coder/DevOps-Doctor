@@ -1,0 +1,32 @@
+#1 [orders-api internal] load build definition from Dockerfile
+#2 [orders-api 1/5] FROM docker.io/library/node:20-alpine
+#5 [orders-api 3/5] RUN npm install --omit=dev
+#5 5.611 added 69 packages in 5s
+#7 [orders-api 5/5] COPY src ./src
+#8 exporting to image
+#8 naming to docker.io/library/orders-api:latest done
+ Container orders-db-1  Started
+ Container orders-db-1  Healthy
+ Container orders-api-1  Started
+orders-api-1  | 2026-10-26T12:41:03.220Z > orders-api@1.7.0 start
+orders-api-1  | 2026-10-26T12:41:03.221Z > node src/index.js
+orders-api-1  | 2026-10-26T12:41:03.287Z node:internal/modules/cjs/loader:1228
+orders-api-1  | 2026-10-26T12:41:03.287Z   throw err;
+orders-api-1  | 2026-10-26T12:41:03.287Z   ^
+orders-api-1  | 2026-10-26T12:41:03.287Z Error: Cannot find module 'dotenv'
+orders-api-1  | 2026-10-26T12:41:03.287Z Require stack:
+orders-api-1  | 2026-10-26T12:41:03.287Z - /app/src/config.js
+orders-api-1  | 2026-10-26T12:41:03.287Z - /app/src/index.js
+orders-api-1  | 2026-10-26T12:41:03.288Z     at Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)
+orders-api-1  | 2026-10-26T12:41:03.288Z     at Module._load (node:internal/modules/cjs/loader:1051:27)
+orders-api-1  | 2026-10-26T12:41:03.288Z     at Module.require (node:internal/modules/cjs/loader:1311:19)
+orders-api-1  | 2026-10-26T12:41:03.288Z     at require (node:internal/modules/helpers:179:18)
+orders-api-1  | 2026-10-26T12:41:03.288Z     at Object.<anonymous> (/app/src/config.js:3:1) {
+orders-api-1  | 2026-10-26T12:41:03.288Z   code: 'MODULE_NOT_FOUND',
+orders-api-1  | 2026-10-26T12:41:03.288Z   requireStack: [ '/app/src/config.js', '/app/src/index.js' ]
+orders-api-1  | 2026-10-26T12:41:03.288Z }
+orders-api-1  | 2026-10-26T12:41:03.290Z Node.js v20.18.0
+orders-api-1 exited with code 1
+ Container orders-api-1  Unhealthy
+ERROR: service "orders-api" failed its health check 6 times (wget http://localhost:8080/health: connection refused)
+deploy failed: rolling back to previous image orders-api:1.6.2

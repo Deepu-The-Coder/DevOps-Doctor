@@ -1,0 +1,30 @@
+#1 [orders-api internal] load build definition from Dockerfile
+#2 [orders-api 1/5] FROM docker.io/library/node:20-alpine
+#5 [orders-api 3/5] RUN npm install --omit=dev
+#5 5.904 added 69 packages in 6s
+#7 [orders-api 5/5] COPY src ./src
+#8 exporting to image
+#8 naming to docker.io/library/orders-api:latest done
+ Volume "orders_pgdata"  Found
+ Container orders-db-1  Recreated
+ Container orders-db-1  Started
+orders-db-1   | PostgreSQL Database directory appears to contain a database; Skipping initialization
+orders-db-1   | 2026-10-26 13:05:41.902 UTC [1] LOG:  starting PostgreSQL 16.4 on x86_64-pc-linux-musl
+orders-db-1   | 2026-10-26 13:05:41.917 UTC [1] LOG:  database system is ready to accept connections
+ Container orders-db-1  Healthy
+ Container orders-api-1  Started
+orders-api-1  | 2026-10-26T13:05:44.310Z > orders-api@1.8.0 start
+orders-api-1  | 2026-10-26T13:05:44.311Z > node src/index.js
+orders-api-1  | 2026-10-26T13:05:44.602Z db: connecting
+orders-db-1   | 2026-10-26 13:05:44.655 UTC [33] FATAL:  password authentication failed for user "orders"
+orders-db-1   | 2026-10-26 13:05:44.655 UTC [33] DETAIL:  Connection matched file "/var/lib/postgresql/data/pg_hba.conf" line 128: "host all all all scram-sha-256"
+orders-api-1  | 2026-10-26T13:05:44.657Z db: attempt 1/5 failed: password authentication failed for user "orders"
+orders-api-1  | 2026-10-26T13:05:46.671Z db: attempt 2/5 failed: password authentication failed for user "orders"
+orders-api-1  | 2026-10-26T13:05:48.684Z db: attempt 3/5 failed: password authentication failed for user "orders"
+orders-api-1  | 2026-10-26T13:05:50.697Z db: attempt 4/5 failed: password authentication failed for user "orders"
+orders-api-1  | 2026-10-26T13:05:52.710Z db: attempt 5/5 failed: password authentication failed for user "orders"
+orders-api-1  | 2026-10-26T13:05:54.722Z FATAL could not connect to database after 5 retries
+orders-api-1 exited with code 1
+ Container orders-api-1  Unhealthy
+ERROR: service "orders-api" failed its health check 6 times (wget http://localhost:8080/health: connection refused)
+deploy failed: rolling back to previous image orders-api:1.7.1

@@ -10,12 +10,14 @@
 // Scoring
 //   correct hypothesis: title + reasoning match the case's `match` regex
 //   top1_correct:       hypothesis #1 is correct
-//   top1_accuracy:      correct / completed runs; provider errors are excluded and counted in `errors`
+//   top1_accuracy:      correct / all cases (errors and timeouts count as misses; also counted in `errors`)
 //   correct_rank:       rank of the first correct hypothesis (null if none)
 //   false_positives:    incorrect hypotheses with confidence >= 0.5
 //   time_ms:            wall time for the run (diagnose, plus the probe loop in full+probe)
 
 import fs from 'node:fs';
+import http from 'node:http';
+import https from 'node:https';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -33,14 +35,44 @@ const expected = JSON.parse(fs.readFileSync(path.join(ROOT, 'eval/expected.json'
   (c) => !ONLY || ONLY.includes(c.case)
 );
 
+// Plain http request (no fetch): fetch gives up after 300s without response headers,
+// and a slow model run can take longer than that.
+function request(p, body) {
+  const url = new URL(API + p);
+  const lib = url.protocol === 'https:' ? https : http;
+  const data = JSON.stringify(body);
+  return new Promise((resolve, reject) => {
+    const req = lib.request(
+      url,
+      { method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } },
+      (res) => {
+        let text = '';
+        res.setEncoding('utf8');
+        res.on('data', (d) => (text += d));
+        res.on('end', () =>
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            text: async () => text,
+            json: async () => JSON.parse(text),
+          })
+        );
+        res.on('error', reject);
+      }
+    );
+    req.setTimeout(15 * 60 * 1000, () => req.destroy(new Error('eval request timed out after 15 min')));
+    req.on('error', reject);
+    req.end(data);
+  });
+}
+
 // Retries once if the backend connection drops (e.g. it restarted).
 async function post(p, body) {
-  const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
   try {
-    return await fetch(API + p, opts);
+    return await request(p, body);
   } catch {
     await new Promise((r) => setTimeout(r, 3000));
-    return fetch(API + p, opts);
+    return request(p, body);
   }
 }
 
@@ -48,6 +80,8 @@ async function diagnose(c, logs, mode) {
   const res = await post('/api/diagnose', { repoUrl: c.repoUrl, branch: c.branch, logs, mode });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  // The backend falls back to the last good answer when the model fails. Don't score that.
+  if (data.meta?.cached) throw new Error(`model failed, cached answer served (${data.meta.cache_reason || 'unknown'})`);
   return data;
 }
 
@@ -109,11 +143,13 @@ async function runCase(c, mode) {
   }
 }
 
-// Accuracy is over completed runs only; errored runs (provider failures) are counted separately.
+// Accuracy is over all cases; errored runs (provider failures, timeouts) count as misses.
 function totals(cases) {
   const ok = cases.filter((r) => !r.error);
   return {
-    top1_accuracy: ok.length ? ok.filter((r) => r.top1_correct).length / ok.length : 0,
+    // Errors and timeouts count as misses.
+    top1_accuracy: cases.length ? ok.filter((r) => r.top1_correct).length / cases.length : 0,
+    top1_accuracy_completed: ok.length ? ok.filter((r) => r.top1_correct).length / ok.length : 0,
     top1_correct: ok.filter((r) => r.top1_correct).length,
     completed: ok.length,
     avg_time_ms: ok.length ? Math.round(ok.reduce((a, r) => a + r.time_ms, 0) / ok.length) : null,
@@ -159,7 +195,7 @@ fs.writeFileSync(path.join(ROOT, 'frontend/public/eval-results.json'), JSON.stri
 console.log('\nmode        top1          avg time   false+   errors');
 for (const r of runs)
   console.log(
-    `${r.mode.padEnd(11)} ${String(r.totals.top1_correct).padStart(2)}/${r.totals.completed} ${(r.totals.top1_accuracy * 100).toFixed(0).padStart(4)}%   ${r.totals.avg_time_ms == null ? '      -' : ((r.totals.avg_time_ms / 1000).toFixed(1) + 's').padStart(7)}   ${String(r.totals.false_positives).padStart(6)}   ${String(r.totals.errors).padStart(6)}`
+    `${r.mode.padEnd(11)} ${String(r.totals.top1_correct).padStart(2)}/${r.cases.length} ${(r.totals.top1_accuracy * 100).toFixed(0).padStart(4)}%   ${r.totals.avg_time_ms == null ? '      -' : ((r.totals.avg_time_ms / 1000).toFixed(1) + 's').padStart(7)}   ${String(r.totals.false_positives).padStart(6)}   ${String(r.totals.errors).padStart(6)}`
   );
 console.log(`
 wrote frontend/public/eval-results.json and eval/results/${stamp}.json`);
