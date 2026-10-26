@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 // Reads a GitHub repo (optionally a subfolder) and picks the files worth sending to the model.
 
 const MAX_FILES = 40;
@@ -44,31 +45,34 @@ export function httpError(status, message) {
   return e;
 }
 
-function ghHeaders() {
+function ghHeaders(token) {
   const h = { 'User-Agent': 'devopsdoctor', Accept: 'application/vnd.github+json' };
-  if (process.env.GITHUB_TOKEN) h.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  if (token) h.Authorization = `Bearer ${token}`;
   return h;
 }
+const rawHeaders = (token) => (token ? { Authorization: `Bearer ${token}` } : {});
+const tokenTag = (token) => (token ? crypto.createHash('sha1').update(token).digest('hex').slice(0, 10) : 'anon');
 
 const ingestCache = new Map(); // key -> { at, value }
 const CACHE_MS = 10 * 60 * 1000;
 
-export async function ingestRepo(repoUrl, branch) {
+// token: the signed-in user's GitHub token (or the server's GITHUB_TOKEN). Cached per token.
+export async function ingestRepo(repoUrl, branch, token = process.env.GITHUB_TOKEN || '') {
   const ref = parseRepoUrl(repoUrl, branch);
-  const key = `${ref.owner}/${ref.repo}@${ref.branch}:${ref.path}`;
+  const key = `${tokenTag(token)}|${ref.owner}/${ref.repo}@${ref.branch}:${ref.path}`;
   const hit = ingestCache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
 
   // Pin to the branch's current commit so raw files aren't served from a stale CDN cache.
   const commitRes = await fetch(
     `https://api.github.com/repos/${ref.owner}/${ref.repo}/commits/${encodeURIComponent(ref.branch)}`,
-    { headers: { ...ghHeaders(), Accept: 'application/vnd.github.sha' } }
+    { headers: { ...ghHeaders(token), Accept: 'application/vnd.github.sha' } }
   );
   checkGitHub(commitRes, ref);
   const commit = (await commitRes.text()).trim();
 
   const treeRes = await fetch(`https://api.github.com/repos/${ref.owner}/${ref.repo}/git/trees/${commit}?recursive=1`, {
-    headers: ghHeaders(),
+    headers: ghHeaders(token),
   });
   checkGitHub(treeRes, ref);
   const tree = await treeRes.json();
@@ -92,7 +96,7 @@ export async function ingestRepo(repoUrl, branch) {
         .split('/')
         .map(encodeURIComponent)
         .join('/')}`,
-      { headers: process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {} }
+      { headers: rawHeaders(token) }
     );
     if (!r.ok) return null;
     return { path: f.rel, content: (await r.text()).replace(/\r\n/g, '\n') };
@@ -114,6 +118,8 @@ export async function ingestRepo(repoUrl, branch) {
     tree: allPaths.map((f) => f.rel), // full listing, for read_file probes
     skipped: allPaths.length - files.length,
   };
+  // Keep the token off the enumerable fields so it can never be serialised into a response.
+  Object.defineProperty(value, 'token', { value: token, enumerable: false });
   ingestCache.set(key, { at: Date.now(), value });
   return value;
 }
@@ -133,7 +139,7 @@ export async function readRepoFile(ingest, relPath) {
   const full = (ingest.repo.path ? ingest.repo.path + '/' : '') + clean;
   const r = await fetch(
     `https://raw.githubusercontent.com/${ingest.repo.owner}/${ingest.repo.repo}/${ingest.sha}/${full.split('/').map(encodeURIComponent).join('/')}`,
-    { headers: process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {} }
+    { headers: rawHeaders(ingest.token) }
   );
   if (!r.ok) return { ok: false, detail: `fetch failed ${r.status}` };
   const content = (await r.text()).replace(/\r\n/g, '\n');

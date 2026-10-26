@@ -6,6 +6,9 @@ import { isTypingTarget } from '../theme/theme.js';
 import HypothesisCard from '../components/HypothesisCard.jsx';
 import ProbeTimeline from '../components/ProbeTimeline.jsx';
 import ShortcutsPopover from '../components/ShortcutsPopover.jsx';
+import RepoPicker from '../components/RepoPicker.jsx';
+import { useAuth } from '../auth.js';
+import { loginUrl } from '../api.js';
 import { CodeViewer, DiffViewer, LogViewer } from '../components/viewers.jsx';
 import { Button, EmptyState, Skeleton, Tabs } from '../components/ui.jsx';
 import './Workspace.css';
@@ -27,6 +30,8 @@ function repoLabel(url, branch) {
 export default function Workspace() {
   const [params] = useSearchParams();
   const caseId = params.get('case');
+  const authError = params.get('auth_error');
+  const auth = useAuth();
 
   // Inputs
   const [repoUrl, setRepoUrl] = useState('');
@@ -281,8 +286,25 @@ export default function Workspace() {
           </div>
           <div className="ws-form">
             {caseNote && <div className="note bad">{caseNote}</div>}
+            {authError && <div className="note bad">GitHub sign-in failed ({authError}). Try again.</div>}
             <label className="field">
-              <span className="section-label">Repository URL</span>
+              <span className="field-head">
+                <span className="section-label">Repository URL</span>
+                {auth.user ? (
+                  <RepoPicker
+                    onPick={({ url, branch: b }) => {
+                      setRepoUrl(url);
+                      setBranch(b);
+                    }}
+                  />
+                ) : (
+                  auth.configured && (
+                    <a className="link-btn" href={loginUrl('/app')} title="Sign in to pick from your repos, including private ones">
+                      sign in for private repos
+                    </a>
+                  )
+                )}
+              </span>
               <input
                 className="input mono"
                 value={repoUrl}

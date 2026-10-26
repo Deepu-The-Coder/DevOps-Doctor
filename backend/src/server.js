@@ -6,21 +6,25 @@ import { runDiagnosis, mockDiagnosis } from './diagnose.js';
 import { runProbeLoop } from './probes.js';
 import { modelInfo } from './model.js';
 import { cacheKey, readCache, writeCache } from './cache.js';
+import { authRouter, githubTokenFor, listUserRepos } from './auth.js';
 
 const app = express();
 const origins = (process.env.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
-app.use(cors(origins.length ? { origin: origins } : {}));
+app.use(cors(origins.length ? { origin: origins, credentials: true } : {}));
+app.set('trust proxy', true);
 app.use(express.json({ limit: '2mb' }));
 
 const MAX_LOG_CHARS = 500_000;
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ...modelInfo() }));
+app.use('/api/auth', authRouter);
+app.get('/api/github/repos', (req, res, next) => listUserRepos(req, res).catch(next));
 
 // 1. Ingest: read the repo and return the (redacted) files the model will see.
 app.post('/api/ingest', async (req, res, next) => {
   try {
     const t0 = Date.now();
-    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch);
+    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch, githubTokenFor(req));
     const { files, redactions } = prepareFiles(ingest.files);
     res.json({
       repo: ingest.repo,
@@ -45,7 +49,7 @@ app.post('/api/diagnose', async (req, res, next) => {
     if (!logsRaw.trim()) throw httpError(400, 'logs are required');
     if (logsRaw.length > MAX_LOG_CHARS) throw httpError(413, 'logs too large (max 500 KB)');
 
-    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch);
+    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch, githubTokenFor(req));
     key = cacheKey({ repo: ingest.repo, logs: logsRaw, mode });
     const { files, redactions: fr } = prepareFiles(ingest.files);
     const logs = prepareLogs(logsRaw);
@@ -89,7 +93,7 @@ app.post('/api/probe', async (req, res, next) => {
     if (!logsRaw.trim()) throw httpError(400, 'logs are required');
     if (!hypotheses.length) throw httpError(400, 'run a diagnosis first');
 
-    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch);
+    const ingest = await ingestRepo(req.body.repoUrl, req.body.branch, githubTokenFor(req));
     const { files } = prepareFiles(ingest.files);
     const logs = prepareLogs(logsRaw);
     const hosts = mentionedHosts(files, logs.all);

@@ -23,3 +23,13 @@ npm run dev               # http://localhost:5173/app?case=case-c
 ```
 
 Docs: [docs/PRD.md](docs/PRD.md), [docs/BUILD_SPEC.md](docs/BUILD_SPEC.md).
+
+## Sign in with GitHub (optional)
+Lets users pick from their own repos, including private ones. The OAuth token stays in a
+server-side session (httpOnly cookie); it is used only for GitHub reads and never sent to the model.
+
+1. https://github.com/settings/developers → New OAuth App
+   - Homepage URL: `http://localhost:5173`
+   - Callback URL: `http://localhost:5173/api/auth/github/callback`
+2. Put the Client ID and a new Client Secret in `backend/.env` as `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`.
+3. Restart the backend. A "Sign in" button appears in the top bar.

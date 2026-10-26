@@ -8,6 +8,7 @@ async function post(path, body, signal) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      credentials: 'include',
       signal,
     });
   } catch (err) {
@@ -22,7 +23,7 @@ async function post(path, body, signal) {
 }
 
 export async function health() {
-  const res = await fetch(`${BASE}/api/health`);
+  const res = await fetch(`${BASE}/api/health`, { credentials: 'include' });
   if (!res.ok) throw new Error('unhealthy');
   return res.json();
 }
@@ -53,4 +54,24 @@ export async function probe({ repoUrl, branch, logs, hypotheses }, onEvent, sign
     }
   }
   if (buf.trim()) onEvent(JSON.parse(buf));
+}
+
+// ---- GitHub sign-in
+export const loginUrl = (next) => `${BASE}/api/auth/github/login?next=${encodeURIComponent(next || '/app')}`;
+
+export async function me() {
+  const res = await fetch(`${BASE}/api/auth/me`, { credentials: 'include' });
+  if (!res.ok) throw new Error('auth unavailable');
+  return res.json();
+}
+
+export async function logout() {
+  await fetch(`${BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+}
+
+export async function myRepos() {
+  const res = await fetch(`${BASE}/api/github/repos`, { credentials: 'include' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data.repos;
 }
