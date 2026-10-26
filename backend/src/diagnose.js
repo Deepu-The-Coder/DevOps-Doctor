@@ -30,8 +30,8 @@ Rules:
 - Return ONLY a JSON object matching the schema. No prose outside JSON.
 - 3 to 5 hypotheses, sorted by confidence (0..1, independent, need not sum to 1).
 - Look specifically for mismatches between code and platform config: env var names the
-  code reads vs names the platform sets, env var scopes (BUILD_TIME vs RUN_TIME), ports,
-  hosts, runtime/engine versions vs dependency versions, Dockerfile vs app spec.
+  code reads vs names the platform sets, build-time-only vars (build args) vs runtime env, ports,
+  hosts, runtime/engine versions vs dependency versions, Dockerfile vs compose/deploy config.
 - Every hypothesis needs at least one evidence item. A file ref must use a path and line
   number that appear in the case file. A log ref uses the number after "L". Copy the quote
   exactly from that line. Never invent files or lines.

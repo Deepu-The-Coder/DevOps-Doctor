@@ -226,9 +226,9 @@ const withTimeout = (p, ms) =>
 function mockPlan(hosts, current, round) {
   if (round === 0) {
     const ip = [...hosts].find((h) => net.isIP(h) && !isPrivate(h));
-    const name = [...hosts].find((h) => !net.isIP(h) && !/github|npmjs|digitalocean\.com$/.test(h));
+    const name = [...hosts].find((h) => !net.isIP(h) && !/github|npmjs|docker\.io$/.test(h));
     const probes = [];
-    if (ip) probes.push({ tool: 'tcp_connect', args: { host: ip, port: 25060 }, reason: 'mock: is the DB address reachable?' });
+    if (ip) probes.push({ tool: 'tcp_connect', args: { host: ip, port: 5432 }, reason: 'mock: is the DB address reachable?' });
     else if (name) probes.push({ tool: 'dns_lookup', args: { host: name }, reason: 'mock: does the host resolve?' });
     probes.push({ tool: 'read_file', args: { path: 'package.json' }, reason: 'mock: check driver version' });
     return { hypotheses: current, probes, done: false };

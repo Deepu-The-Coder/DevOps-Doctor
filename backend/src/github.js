@@ -12,8 +12,9 @@ const TEXT_NAMES = /(^|\/)(Dockerfile[^/]*|Procfile|Makefile|\.env[^/]*|\.nvmrc|
 // Higher score = more likely to matter for a deploy failure.
 function score(path) {
   const p = path.toLowerCase();
-  if (/(^|\/)\.do\/|app\.ya?ml$|app-spec/.test(p)) return 100;
-  if (/(^|\/)dockerfile|docker-compose|procfile/.test(p)) return 95;
+  // Deploy / platform config
+  if (/(^|\/)(docker-compose|compose)[^/]*\.ya?ml$|fly\.toml$|render\.ya?ml$|railway\.(json|toml)$|vercel\.json$|netlify\.toml$|app\.ya?ml$|(^|\/)(k8s|kubernetes|helm|deploy)\//.test(p)) return 100;
+  if (/(^|\/)dockerfile|procfile/.test(p)) return 95;
   if (/(^|\/)package\.json$|requirements\.txt$|go\.mod$|gemfile$/.test(p)) return 90;
   if (/(^|\/)\.env/.test(p)) return 85;
   if (/config|settings|db|database|env/.test(p)) return 80;

@@ -25,8 +25,8 @@ export function modelInfo() {
 export async function chatJSON(messages, { timeoutMs = 90_000 } = {}) {
   const key = process.env.MODEL_ACCESS_KEY;
   const model = process.env.MODEL_ID;
-  const base = (process.env.MODEL_BASE_URL || 'https://inference.do-ai.run/v1').replace(/\/+$/, '');
-  if (!key || !model) {
+  const base = baseUrl();
+  if ((!key && providerName() !== 'local') || !model) {
     const e = new Error('Model not configured: set MODEL_ACCESS_KEY and MODEL_ID on the backend.');
     e.status = 503;
     throw e;

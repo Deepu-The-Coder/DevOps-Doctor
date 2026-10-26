@@ -14,13 +14,14 @@ design/       Stitch export (workspace screen)
 
 ## Sample cases
 Every case fails the same way at app level: `FATAL could not connect to database after 5
-retries`, then App Platform health checks fail. The causes differ:
+retries`, then the container fails its health check. Each case is deployed with
+Docker Compose (`docker-compose.yml` + `Dockerfile`). The causes differ:
 
 | Case   | Category   | Planted bug |
 |--------|------------|-------------|
-| case-a | env        | code reads `DB_URL` (src/config.js), app spec sets `DATABASE_URL` |
-| case-b | platform   | app spec sets `DATABASE_URL` with `scope: BUILD_TIME`, so it is missing at runtime |
-| case-c | network    | app spec hard-codes an unreachable DB IP (`203.0.113.24:25060`) instead of `${orders-db.DATABASE_URL}` |
+| case-a | env        | code reads `DB_URL` (src/config.js), docker-compose.yml sets `DATABASE_URL` |
+| case-b | platform   | `DATABASE_URL` is only a build arg (compose `build.args` + Dockerfile `ARG`), so it is missing at runtime |
+| case-c | network    | docker-compose.yml hard-codes an unreachable old DB IP (`203.0.113.24:5432`) instead of the `db` service |
 | case-d | dependency | `pg@7.4.3` on Node 20 (pg < 8 breaks on Node >= 14) |
 
 The "Reveal answer" text in frontend/src/data/cases.js is left for the team to write.
@@ -35,11 +36,11 @@ The "Reveal answer" text in frontend/src/data/cases.js is left for the team to w
 
 ## Case file
 - Repo: one GitHub tree API call, contents via raw.githubusercontent.com. Up to 40 text
-  files / 120 KB, ranked: app spec > Dockerfile > manifests > .env examples > config > src.
+  files / 120 KB, ranked: deploy config (compose, fly, render, k8s…) > Dockerfile > manifests > .env examples > config > src.
   Real `.env` files are never read into the case. Ingest cached 10 min in memory.
 - Logs: kept with original line numbers; if > 400 lines, signal lines + last 150.
 - Secrets are masked in place (URL passwords, *_SECRET/TOKEN/PASSWORD/KEY values, GitHub/
-  AWS/DO/sk- tokens, private keys) before anything goes to the model or the browser.
+  AWS/sk- tokens, private keys) before anything goes to the model or the browser.
 
 ## Diagnosis JSON (model output, after normalisation)
 ```
@@ -64,7 +65,7 @@ resolution too). No shell commands are ever executed.
 
 ## Model
 Gemma via any OpenAI-compatible API (default: Google AI Studio,
-`https://generativelanguage.googleapis.com/v1beta/openai`). DigitalOcean is not used.
+`https://generativelanguage.googleapis.com/v1beta/openai`).
 `POST {MODEL_BASE_URL}/chat/completions`, `Authorization: Bearer MODEL_ACCESS_KEY`. System
 prompts are folded into the first user message for Gemma models.
 `npm run models` lists ids available to the key. temperature 0.1, JSON-only prompt,
@@ -78,4 +79,4 @@ JSON extracted from fences/prose if needed.
 
 ## Not built yet
 Eval script (`scripts/eval.js` → `frontend/public/eval-results.json`), Benchmarks,
-Overview, How it works, App Platform spec for this project.
+Overview, How it works, deploy config for this project.

@@ -11,7 +11,6 @@ const RULES = [
   ],
   [/\bgh[pousr]_[A-Za-z0-9]{20,}\b/g, () => '[REDACTED_GITHUB_TOKEN]'],
   [/\bAKIA[0-9A-Z]{16}\b/g, () => '[REDACTED_AWS_KEY]'],
-  [/\bdop_v1_[a-f0-9]{40,}\b/g, () => '[REDACTED_DO_TOKEN]'],
   [/\bsk-[A-Za-z0-9_-]{20,}\b/g, () => '[REDACTED_API_KEY]'],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, (m) => m.split('\n').map(() => '[REDACTED_PRIVATE_KEY]').join('\n')],
 ];

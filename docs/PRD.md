@@ -31,8 +31,7 @@ differential diagnosis: 3–5 ranked root-cause hypotheses, each with evidence
 (file:line or log line), what would rule it out, and a suggested patch. Probe
 Mode lets the model order safe, allowlisted, read-only checks and re-rank.
 
-Powered by Gemma 4 on DigitalOcean serverless inference; deployed on
-DigitalOcean App Platform.
+Powered by Gemma 4 via an OpenAI-compatible API (Google AI Studio by default).
 
 Pitch line: "One investigation workflow for both code-level bugs and deployment
 failures."
@@ -75,10 +74,10 @@ Global shell (all pages):
   (Workspace, Cases, Benchmarks, How it works), right side: theme toggle,
   GitHub repo link icon. Active nav item marked with a 2px bottom border in
   accent color, not a filled pill.
-- Footer only on Overview and How it works (one line: "Gemma 4 · DigitalOcean
-  App Platform · built at <hackathon name>"). Workspace has a status bar instead.
-- For App Platform static hosting, add a catch-all rewrite so deep links
-  (/benchmarks) serve index.html. Put it in .do/app.yaml (catchall_document).
+- Footer only on Overview and How it works (one line: "Gemma 4 · built at
+  <hackathon name>"). Workspace has a status bar instead.
+- Static hosting must rewrite unknown paths to index.html so deep links
+  (/benchmarks) work.
 
 ## 6. Design system
 
@@ -172,7 +171,7 @@ Acceptance:
 ### 7.2 /cases — Case library (P0)
 Purpose: let judges and users run a known failure in one click.
 - Dense table/list of the 4 cases. Columns: case id (mono), symptom (one line),
-  stack ("Node · Express · Postgres"), platform ("App Platform"), log size, and
+  stack ("Node · Express · Postgres"), platform ("Docker Compose"), log size, and
   "Open in workspace" button → /app?case=<id>.
 - Do NOT reveal the root cause in the list. Each row has a collapsed
   "Reveal answer" disclosure (for after the demo).
@@ -221,7 +220,7 @@ Acceptance: numbers on the page match the eval script output exactly.
 
 ### 7.5 /how-it-works — How it works (P2)
 - Architecture diagram as inline SVG using theme tokens (React frontend →
-  Express backend → GitHub API / Gemma 4 on DigitalOcean serverless; probes box
+  Express backend → GitHub API / Gemma 4 model API; probes box
   with the 4 allowlisted tools).
 - Short sections: case file construction, the diagnosis JSON schema (render
   schema as a mono code block), probe loop (max 3 rounds), evidence

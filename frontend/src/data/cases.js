@@ -5,7 +5,7 @@ const SAMPLE_BASE = 'https://github.com/Deepu-The-Coder/DevOps-Doctor/tree/main/
 const common = {
   branch: 'main',
   stack: 'Node · Express · Postgres',
-  platform: 'App Platform',
+  platform: 'Docker Compose',
 };
 
 export const CASES = [
