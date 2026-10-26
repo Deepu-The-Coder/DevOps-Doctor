@@ -492,7 +492,7 @@ export default function Workspace() {
         <span className="sb-item">
           <span className={`dot ${engineState}`} />
           <span>{meta?.model || engine?.model || 'model unknown'}</span>
-          <span className="dim">(do-serverless)</span>
+          <span className="dim">({meta?.provider || engine?.provider || "no provider"})</span>
         </span>
         {meta && (
           <>

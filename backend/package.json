@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
-    "models": "node --env-file-if-exists=.env src/listModels.js"
+    "models": "node --env-file-if-exists=.env src/listModels.js --gemma"
   },
   "dependencies": {
     "cors": "2.8.5",

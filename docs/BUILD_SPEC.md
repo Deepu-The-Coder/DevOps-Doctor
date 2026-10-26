@@ -63,8 +63,10 @@ never private, loopback, link-local, CGNAT or multicast addresses (checked after
 resolution too). No shell commands are ever executed.
 
 ## Model
-Gemma 4 via DigitalOcean serverless inference, OpenAI-compatible
-`POST {MODEL_BASE_URL}/chat/completions` with `Authorization: Bearer MODEL_ACCESS_KEY`.
+Gemma via any OpenAI-compatible API (default: Google AI Studio,
+`https://generativelanguage.googleapis.com/v1beta/openai`). DigitalOcean is not used.
+`POST {MODEL_BASE_URL}/chat/completions`, `Authorization: Bearer MODEL_ACCESS_KEY`. System
+prompts are folded into the first user message for Gemma models.
 `npm run models` lists ids available to the key. temperature 0.1, JSON-only prompt,
 JSON extracted from fences/prose if needed.
 

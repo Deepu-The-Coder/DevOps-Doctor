@@ -1,7 +1,22 @@
-// Gemma 4 via DigitalOcean serverless inference (OpenAI-compatible chat completions).
+// Gemma via any OpenAI-compatible chat completions API.
+// Default: Google AI Studio (Gemini API). Also works with Ollama, OpenRouter, etc.
+const DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
+const baseUrl = () => (process.env.MODEL_BASE_URL || DEFAULT_BASE).replace(/\/+$/, '');
+
+export function providerName() {
+  try {
+    const h = new URL(baseUrl()).hostname;
+    if (h.includes('googleapis')) return 'google-ai-studio';
+    if (h === 'localhost' || h === '127.0.0.1') return 'local';
+    return h;
+  } catch {
+    return 'unknown';
+  }
+}
 
 export function modelInfo() {
   return {
+    provider: process.env.LLM_MOCK === '1' ? 'mock' : providerName(),
     model: process.env.LLM_MOCK === '1' ? 'mock (LLM_MOCK=1)' : process.env.MODEL_ID || '(MODEL_ID not set)',
     mock: process.env.LLM_MOCK === '1',
   };
@@ -23,8 +38,8 @@ export async function chatJSON(messages, { timeoutMs = 90_000 } = {}) {
     const res = await fetch(`${base}/chat/completions`, {
       method: 'POST',
       signal: ctrl.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, messages, temperature: 0.1, max_tokens: 4000 }),
+      headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+      body: JSON.stringify({ model, messages: /gemma/i.test(model) ? foldSystem(messages) : messages, temperature: 0.1, max_tokens: 4000 }),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
@@ -65,4 +80,13 @@ export function extractJSON(text) {
     e.status = 502;
     throw e;
   }
+}
+
+// Gemma on Google AI Studio rejects system messages, so fold them into the first user turn.
+function foldSystem(messages) {
+  const sys = messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
+  const rest = messages.filter((m) => m.role !== 'system');
+  if (!sys) return rest;
+  if (rest[0]?.role === 'user') return [{ role: 'user', content: sys + '\n\n' + rest[0].content }, ...rest.slice(1)];
+  return [{ role: 'user', content: sys }, ...rest];
 }

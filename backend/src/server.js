@@ -49,13 +49,14 @@ app.post('/api/diagnose', async (req, res, next) => {
     key = cacheKey({ repo: ingest.repo, logs: logsRaw, mode });
     const { files, redactions: fr } = prepareFiles(ingest.files);
     const logs = prepareLogs(logsRaw);
-    const { model, mock } = modelInfo();
+    const { model, mock, provider } = modelInfo();
 
     const result = mock ? { diagnosis: mockDiagnosis({ files, logs, mode }), usage: null } : await runDiagnosis({ files, logs, mode });
     const payload = {
       diagnosis: result.diagnosis,
       meta: {
         model,
+        provider,
         mock,
         mode,
         cached: false,
