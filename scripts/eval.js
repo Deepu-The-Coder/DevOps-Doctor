@@ -93,7 +93,7 @@ for (const mode of MODES) {
       let rounds = 0;
       if (mode === 'full+probe') ({ hypotheses: hyps, rounds } = await probe(c, logs, hyps));
       const s = score(c, hyps);
-      const row = { case: c.case, ...s, time_ms: Date.now() - t0, cached: !!d.meta.cached, ...(mode === 'full+probe' ? { probe_rounds: rounds } : {}) };
+      const row = { case: c.case, ...s, time_ms: Date.now() - t0, cached: !!d.meta.cached, hypotheses: hyps.map(({ title, category, confidence, reasoning }) => ({ title, category, confidence, reasoning })), ...(mode === 'full+probe' ? { probe_rounds: rounds } : {}) };
       cases.push(row);
       console.log(`top1=${s.top1_correct ? 'yes' : 'no '} rank=${s.correct_rank ?? '-'} fp=${s.false_positives} ${(row.time_ms / 1000).toFixed(1)}s${row.cached ? ' (cached)' : ''}`);
     } catch (err) {

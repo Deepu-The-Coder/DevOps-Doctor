@@ -68,12 +68,12 @@ app.post('/api/diagnose', async (req, res, next) => {
         generated_at: new Date().toISOString(),
       },
     };
-    if (!mock) writeCache(key, payload);
+    if (!mock && payload.diagnosis.hypotheses.length) writeCache(key, payload);
     res.json(payload);
   } catch (err) {
     // Model or network failure: fall back to the last good run for the same inputs.
     const cached = key && readCache(key);
-    if (cached && (err.status || 500) >= 500) {
+    if (cached?.diagnosis?.hypotheses?.length && (err.status || 500) >= 500) {
       return res.json({ ...cached, meta: { ...cached.meta, cached: true, cache_reason: err.message, time_ms: Date.now() - t0 } });
     }
     next(err);

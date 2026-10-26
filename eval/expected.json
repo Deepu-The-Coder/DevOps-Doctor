@@ -17,7 +17,7 @@
       "log": "frontend/public/cases/case-b.log",
       "category": "platform",
       "root_cause": "DATABASE_URL is only a build arg (compose build.args + Dockerfile ARG), so it is missing at runtime.",
-      "match": "build[- ]?(arg|time|stage)|\\bARG\\b|not (set|available|passed) at runtime|missing (from|at) runtime"
+      "match": "build[- ]?(arg|time|stage)|\\bARG\\b|(missing|not (set|available|present|passed)|absent|undefined)[^.]{0,40}runtime"
     },
     {
       "case": "case-c",
