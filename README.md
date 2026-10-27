@@ -307,4 +307,4 @@ docs/               PRD, build spec, screenshots
 
 ---
 
-Built at a hackathon by **Gautam** · [github.com/Deepu-The-Coder/DevOps-Doctor](https://github.com/Deepu-The-Coder/DevOps-Doctor)
+Built at a hackathon by **Deepak** and **Gautam** · [github.com/Deepu-The-Coder/DevOps-Doctor](https://github.com/Deepu-The-Coder/DevOps-Doctor)
